@@ -1,0 +1,3 @@
+#sample_id	read_file_name	user_notes
+yeast.SNP	yeast.SNP.illumina.R1.fastq.gz,yeast.SNP.illumina.R2.fastq.gz	sample="yeast.SNP";note="yeast genome with 10000 SNPs"
+yeast.CNV_DEL	yeast.CNV_DEL.illumina.R1.fastq.gz,yeast.CNV_DEL.illumina.R2.fastq.gz	sample="yest.CNV_DEL";note="yeast genome with 10 segmental deletions"

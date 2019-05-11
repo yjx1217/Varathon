@@ -1,0 +1,25 @@
+#http://genome.ucsc.edu/cgi-bin/hgTables?hgsid=717837565_0v0BSTaoWRLH5uFpBkbYrt6BnLmm&clade=mammal&org=Human&db=hg38&hgta_group=map&hgta_track=centromeres&hgta_table=0&hgta_regionType=genome&position=chr1%3A1-248%2C956%2C422&hgta_outputType=gff&hgta_outFileName=
+1	hg38_centromeres	centromere	122026460	124932724	.	.	.	ID=CEN1;
+2	hg38_centromeres	centromere	92188146	94090557	.	.	.	ID=CEN2;
+3	hg38_centromeres	centromere	90772459	93655574	.	.	.	ID=CEN3;
+4	hg38_centromeres	centromere	49712062	51743951	.	.	.	ID=CEN4;
+5	hg38_centromeres	centromere	46485901	50059807	.	.	.	ID=CEN5;
+6	hg38_centromeres	centromere	58553889	59829934	.	.	.	ID=CEN6;
+7	hg38_centromeres	centromere	58169654	61528020	.	.	.	ID=CEN7;
+8	hg38_centromeres	centromere	44033745	45877265	.	.	.	ID=CEN8;
+9	hg38_centromeres	centromere	43389636	45518558	.	.	.	ID=CEN9;
+X	hg38_centromeres	centromere	58605580	62412542	.	.	.	ID=CENX;
+Y	hg38_centromeres	centromere	10316945	10544039	.	.	.	ID=CENY;
+10	hg38_centromeres	centromere	39686683	41593521	.	.	.	ID=CEN10;
+11	hg38_centromeres	centromere	51078349	54425074	.	.	.	ID=CEN11;
+12	hg38_centromeres	centromere	34769408	37185252	.	.	.	ID=CEN12;
+13	hg38_centromeres	centromere	16000001	18051248	.	.	.	ID=CEN13;
+14	hg38_centromeres	centromere	16000001	18173523	.	.	.	ID=CEN14;
+15	hg38_centromeres	centromere	17083674	19725254	.	.	.	ID=CEN15;
+16	hg38_centromeres	centromere	36311159	38265669	.	.	.	ID=CEN16;
+17	hg38_centromeres	centromere	22813680	26616164	.	.	.	ID=CEN17;
+18	hg38_centromeres	centromere	15460900	20861206	.	.	.	ID=CEN18;
+19	hg38_centromeres	centromere	24498981	27190874	.	.	.	ID=CEN19;
+20	hg38_centromeres	centromere	26436233	30038348	.	.	.	ID=CEN20;
+21	hg38_centromeres	centromere	10864561	12915808	.	.	.	ID=CEN21;
+22	hg38_centromeres	centromere	12954789	15054318	.	.	.	ID=CEN22;
