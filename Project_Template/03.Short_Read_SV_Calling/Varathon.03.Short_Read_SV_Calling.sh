@@ -12,7 +12,7 @@ batch_id="Batch_yeast_sim_illumina" # The batch_id of the processing batch. Defa
 ref_genome="./../00.Reference_Genomes/yeast.tidy.lite.fa" # The input ref_genome used for short-read-based CNV calling. Default = "./../00.Reference_Genomes/yeast.tidy.lite.fa".
 excluded_chr_list="./../../data/yeast.excluded_chr_list.txt" # The list for specifying chromosomes/scaffolds/contigs to be exclued for short-read-based CNV calling. Use "" if there is no chromosome/scaffold/contig for exclusion. Default = "./../../data/yeast.excluded_chr_list.txt". 
 min_mapping_quality=30 # The minimal mapping quality to use for filtering short-read mapping alignment. Default = 30.
-ploidy=1; # The ploidy status of samples in the processing batch. Default = 2.
+ploidy=2; # The ploidy status of samples in the processing batch. Default = 2.
 sv_caller="manta" # The specific caller used for SV calling: "manta" or "delly". Default = "manta".
 threads=4 # The number of threads to use. Defualt = 4.
 debug="no" # Whether to keep intermediate files for debuging. Use "yes" if prefer to keep intermediate files, otherwise use "no". Default = "no".

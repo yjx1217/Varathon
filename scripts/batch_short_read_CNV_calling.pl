@@ -65,7 +65,7 @@ foreach my $sample_id (@sample_table) {
     my $local_time = localtime();
     print "[$local_time] processing sample $sample_id with read-alignment filtering\n";
     my $ref_genome_file = "$base_dir/$ref_genome";
-    my $bam_file = "$short_read_mapping_dir/$batch_id/$sample_id/$sample_id.realn.bam";
+    my $bam_file = "$base_dir/$short_read_mapping_dir/$batch_id/$sample_id/$sample_id.realn.bam";
     print "Check the specified reference genome file:\n";
     if (-e $ref_genome_file) {
         print "Successfully located the specified reference genome file: $ref_genome_file.\n";
@@ -112,7 +112,7 @@ foreach my $sample_id (@sample_table) {
     } else {
 	system("perl $VARATHON_HOME/scripts/run_FREEC_wrapper.pl -r ref.genome.fa -bam $sample_id.realn.bam -prefix $sample_id -ploidy $ploidy -bedtools $bedtools_dir/bedtools -samtools $samtools_dir/samtools -gemtools $gemtools_dir/gemtools -gem_mappability $gemtools_dir/gem-mappability -freec $freec_dir/freec -window $window_size -step $step_size -read_length_for_mappability $raw_read_length -min_mappability $min_mappability -mates_orientation 0 -threads $threads");
     }
-    system("Rscript --vanilla --slave $VARATHON_HOME/scripts/CNV_segmentation_by_DNAcopy.R --input $sample_id.FREEC.bam_ratio.txt --prefix $sample_id --ploidy $ploidy --genome_fai ref.genome.fa.fai");
+    system("Rscript --vanilla --slave $VARATHON_HOME/scripts/CNV_segmentation_by_DNAcopy.R --input $sample_id.FREEC.bam_ratio.txt --prefix $sample_id --window $window_size --ploidy $ploidy --genome_fai ref.genome.fa.fai");
     system("perl $VARATHON_HOME/scripts/adjust_FREEC_copynumber_by_DNAcopy_copynumber.pl -i $sample_id.FREEC.bam_ratio.sorted.txt -a $sample_id.FREEC.bam_ratio.sorted.resegmented.lite.txt -o $sample_id.FREEC.bam_ratio.sorted.adjusted.txt");
     if (-s "$sample_id.FREEC.bam_ratio.sorted.adjusted.txt") {
 	$local_time = localtime();

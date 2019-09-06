@@ -112,7 +112,7 @@ foreach my $sample_id (@sample_table) {
 	    system("/usr/bin/time -v $ngmlr_dir/ngmlr -t $threads -x ont -r ref.genome.fa -q $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} -o $sample_id.sam");
 	}
 	if ($debug eq "no") {
-	    system("ref.genome.fa-*.ngm");
+	    system("rm ref.genome.fa-*.ngm");
 	}
     } elsif ($long_read_mapper eq "last") {
 	system("/usr/bin/time -v $last_dir/lastdb -v -P $threads ref.genome.lastdb ref.genome.fa");

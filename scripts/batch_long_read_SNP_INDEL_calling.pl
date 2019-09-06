@@ -65,7 +65,7 @@ foreach my $sample_id (@sample_table) {
     my $local_time = localtime();
     print "[$local_time] processing sample $sample_id with read-alignment filtering\n";
     my $ref_genome_file = "$base_dir/$ref_genome";
-    my $bam_file = "$long_read_mapping_dir/$batch_id/$sample_id/$sample_id.dedup.bam";
+    my $bam_file = "$base_dir/$long_read_mapping_dir/$batch_id/$sample_id/$sample_id.dedup.bam";
     print "Check the specified reference genome file:\n";
     if (-e $ref_genome_file) {
         print "Successfully located the specified reference genome file: $ref_genome_file.\n";
