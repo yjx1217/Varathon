@@ -4,6 +4,7 @@ set -e -o pipefail
 ##########################################
 # load environment variables for Varathon
 source ./../../env.sh
+PATH="$samtools_dir:$PATH"
 source $miniconda2_dir/activate $build_dir/conda_clairvoyante_env
 
 ###########################################
