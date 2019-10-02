@@ -190,7 +190,7 @@ foreach my $sample_id (@sample_table) {
 	    system("rm ref.genome.fa");
 	    system("rm ref.genome.fa.fai");
 	    system("rm ref.genome.dict");
-	    system("rm $sample_id.depth.txt.gz");
+	    # system("rm $sample_id.depth.txt.gz");
 	}
     }
     chdir("./../") or die "cannot change directory to: $!\n";

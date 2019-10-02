@@ -19,8 +19,8 @@ ART_DOWNLOAD_URL="https://www.niehs.nih.gov/research/resources/assets/docs/artbi
 
 SIMLORD_VERSION="1.0.2" #
 
-DEEPSIMULATOR_VERSION="1.5.0" # released on 2019.06.16 
-DEEPSIMULATOR_GITHUB_COMMIT_VERSION="be68c72" # committed on 2019.07.22
+DEEPSIMULATO_VERSION="1.5.0" # released on 2019.06.16 
+DEEPSIMULATOR_GITHUB_COMMIT_VERSION="ddd3e4b" # committed on 2019.07.22
 DEEPSIMULATOR_DOWNLOAD_URL="https://github.com/lykaust15/DeepSimulator.git"
 
 TRIMMOMATIC_VERSION="0.38" # released on 
@@ -257,7 +257,8 @@ echo "Download DeepSimulator-v${DEEPSIMULATOR_GITHUB_COMMIT_VERSION}"
 git clone $DEEPSIMULATOR_DOWNLOAD_URL
 deepsimulator_dir="$build_dir/DeepSimulator"
 cd $deepsimulator_dir
-git checkout -f -q $DEEPSIMULATOR_GITHUB_COMMIT_VERSION
+#git checkout -f -q $DEEPSIMULATOR_GITHUB_COMMIT_VERSION
+git checkout discontinuous-fasta
 $miniconda2_dir/conda remove --name tensorflow_cdpm --all -y
 $miniconda2_dir/conda create --name tensorflow_cdpm python=2.7 -y
 source $miniconda2_dir/activate tensorflow_cdpm
@@ -275,12 +276,15 @@ source $miniconda2_dir/activate basecall
 #-> 2. install basecaller
 #--| 2.1 install albacore_2.3.1
 cd base_caller/albacore_2.3.1/
-./download_and_install.sh
+wget -q https://mirror.oxfordnanoportal.com/software/analysis/ont_albacore-2.3.1-cp36-cp36m-manylinux1_x86_64.whl
+pip install ont_albacore-2.3.1-cp36-cp36m-manylinux1_x86_64.whl
+rm -f ont_albacore-2.3.1-cp36-cp36m-manylinux1_x86_64.whl
 cd ../../
-
 #--| 2.2 install guppy_3.1.5
 cd base_caller/guppy_3.1.5/
-./download_and_install.sh
+wget -q https://mirror.oxfordnanoportal.com/software/analysis/ont-guppy-cpu_3.1.5_linux64.tar.gz
+tar xzf ont-guppy-cpu_3.1.5_linux64.tar.gz
+rm -f ont-guppy-cpu_3.1.5_linux64.tar.gz
 cd ../../
 source $miniconda2_dir/deactivate
 
