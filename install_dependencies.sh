@@ -259,18 +259,17 @@ git clone $DEEPSIMULATOR_DOWNLOAD_URL
 deepsimulator_dir="$build_dir/DeepSimulator"
 cd $deepsimulator_dir
 #git checkout -f -q $DEEPSIMULATOR_GITHUB_COMMIT_VERSION
-#git pull
 git checkout discontinuous-fasta
 $miniconda2_dir/conda remove --name tensorflow_cdpm --all -y
 $miniconda2_dir/conda create --name tensorflow_cdpm python=2.7 -y
 source $miniconda2_dir/activate tensorflow_cdpm
 $miniconda2_dir/conda install -y -c anaconda scikit-learn=0.20.3
+pip install numpy==1.13.1
 pip install tensorflow==1.2.1
 pip install tflearn==0.3.2
 pip install tqdm==4.19.4
 pip install scipy==0.18.1
 pip install h5py==2.7.1
-pip install numpy==1.13.1
 source $miniconda2_dir/deactivate
 $miniconda2_dir/conda remove --name basecall --all -y
 $miniconda2_dir/conda create --name basecall python=3.6 -y
