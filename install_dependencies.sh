@@ -216,6 +216,7 @@ miniconda2_dir="$build_dir/miniconda2/bin"
 $miniconda2_dir/conda config --add channels defaults
 $miniconda2_dir/conda config --add channels bioconda
 $miniconda2_dir/conda config --add channels conda-forge
+$miniconda2_dir/pip install cython numpy==1.13.1
 rm Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh 
 
 # ------------- simuG -------------------
@@ -258,6 +259,7 @@ git clone $DEEPSIMULATOR_DOWNLOAD_URL
 deepsimulator_dir="$build_dir/DeepSimulator"
 cd $deepsimulator_dir
 #git checkout -f -q $DEEPSIMULATOR_GITHUB_COMMIT_VERSION
+#git pull
 git checkout discontinuous-fasta
 $miniconda2_dir/conda remove --name tensorflow_cdpm --all -y
 $miniconda2_dir/conda create --name tensorflow_cdpm python=2.7 -y

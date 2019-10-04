@@ -39,12 +39,11 @@ then
 	--no-sam \
 	$output_prefix.$long_read_technology
 else
-    PATH="$VARATHON_HOME/build/miniconda2/bin:$PATH"
+    export PATH="$VARATHON_HOME/build/miniconda2/bin:$PATH"
     $deepsimulator_dir/deep_simulator.sh -H $deepsimulator_dir -c $threads -i $ref_genome -B 2 -K $read_coverage -S $random_seed -o ${output_prefix}_deepsimulator_out
     cp ./${output_prefix}_deepsimulator_out/pass.fastq $output_prefix.$long_read_technology.fastq
     if [[ $debug == "no" ]]
     then
-	# rm $output_prefix.read_num.txt
 	rm -r ${output_prefix}_deepsimulator_out
     fi
 fi
