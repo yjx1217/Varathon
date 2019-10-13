@@ -30,6 +30,7 @@ foreach my $id (@input) {
     my $offset = 0;
     while ($total_length - $offset > $width) {
 	my $subseq = substr $input{$id}, $offset, $width;
+	$subseq =~ s/[RYKMSWBDHV]/N/gi;
 	print $output_fh "$subseq\n";
 	$offset += $width;
     }
