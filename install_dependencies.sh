@@ -12,7 +12,7 @@ SIMUG_DOWNLOAD_URL="https://github.com/yjx1217/simuG.git"
 
 # reads retrieving/simulation/processing
 SRA_VERSION="2.9.6" # released on 2019.03.18
-SRA_DOWNLOAD_URL="http://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/${SRA_VERSION}/sratoolkit.${SRA_VERSION}-centos_linux64.tar.gz"
+SRA_DOWNLOAD_URL="https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/${SRA_VERSION}/sratoolkit.${SRA_VERSION}-centos_linux64.tar.gz"
 
 ART_VERSION="mountrainier2016.06.05" # released on 2016.06.05
 ART_DOWNLOAD_URL="https://www.niehs.nih.gov/research/resources/assets/docs/artbin${ART_VERSION}linux64.tgz"
