@@ -216,7 +216,7 @@ miniconda2_dir="$build_dir/miniconda2/bin"
 $miniconda2_dir/conda config --add channels defaults
 $miniconda2_dir/conda config --add channels bioconda
 $miniconda2_dir/conda config --add channels conda-forge
-$miniconda2_dir/pip install cython numpy==1.13.1 biopython
+$miniconda2_dir/pip install cython numpy==1.13.1
 rm Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh 
 
 # ------------- simuG -------------------
