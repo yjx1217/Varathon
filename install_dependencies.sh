@@ -1,5 +1,5 @@
 #!/bin/bash
-# last update: 2019.08.23
+# last update: 2019.11.05
 set -e -o pipefail
 
 VARATHON_HOME=$(pwd)
@@ -20,7 +20,7 @@ ART_DOWNLOAD_URL="https://www.niehs.nih.gov/research/resources/assets/docs/artbi
 SIMLORD_VERSION="1.0.2" #
 
 DEEPSIMULATOR_VERSION="1.5.0" # released on 2019.06.16 
-DEEPSIMULATOR_GITHUB_COMMIT_VERSION="d3c7a89" # committed on 2019.10.17
+DEEPSIMULATOR_GITHUB_COMMIT_VERSION="3c867c2" # committed on 2019.11.02
 DEEPSIMULATOR_DOWNLOAD_URL="https://github.com/lykaust15/DeepSimulator.git"
 
 TRIMMOMATIC_VERSION="0.38" # released on 
@@ -258,19 +258,18 @@ echo "Download DeepSimulator-v${DEEPSIMULATOR_GITHUB_COMMIT_VERSION}"
 git clone $DEEPSIMULATOR_DOWNLOAD_URL
 deepsimulator_dir="$build_dir/DeepSimulator"
 cd $deepsimulator_dir
-#git checkout -f -q $DEEPSIMULATOR_GITHUB_COMMIT_VERSION
-git checkout -f -q -b discontinuous-fasta $DEEPSIMULATOR_GITHUB_COMMIT_VERSION
+git checkout -f -q $DEEPSIMULATOR_GITHUB_COMMIT_VERSION
 $miniconda2_dir/conda remove --name tensorflow_cdpm --all -y
 $miniconda2_dir/conda create --name tensorflow_cdpm python=2.7 -y
 source $miniconda2_dir/activate tensorflow_cdpm
-#$miniconda2_dir/conda install -y -c anaconda scikit-learn=0.20.3
+$miniconda2_dir/conda install -y -c anaconda scikit-learn=0.20.3
 pip install numpy==1.13.1
 pip install tensorflow==1.2.1
 pip install tflearn==0.3.2
 pip install tqdm==4.19.4
 pip install scipy==0.18.1
 pip install h5py==2.7.1
-pip install scikit-learn==0.20.3
+#pip install scikit-learn==0.20.3
 pip install biopython==1.74
 source $miniconda2_dir/deactivate
 $miniconda2_dir/conda remove --name basecall --all -y
