@@ -24,7 +24,7 @@ Under the hood, a series of task-specific modules are provided to carry out the 
 * **01.Short_Read_Mapping**
   * mapping short-read mapping to the reference genome (by bwa)
 * **02.Short_Read_SNP_INDEL_Calling**
-  * calling SNPs and INDELs based on the short-read mapping alignment (by GATK4 or freebayes or Clairvoyante)
+  * calling SNPs and INDELs based on the short-read mapping alignment (by GATK4 or freebayes)
 * **03.Short_Read_SV_Calling**
   * calling SVs based on the short-read mapping alignment (by Manta or Delly)
 * **04.Short_Read_CNV_Calling**
@@ -32,7 +32,7 @@ Under the hood, a series of task-specific modules are provided to carry out the 
 * **11.Long_Read_Mapping**
   * mapping long reads to the reference genome (by minimap2, pbmm2, ngmlr, or last)
 * **12.Long_Read_SNP_INDEL_Calling**
-  * calling SNPs and INDELs based on the long-read mapping alignment (by Clairvoyante or longshot)
+  * calling SNPs and INDELs based on the long-read mapping alignment (by longshot)
 * **13.Long_Read_SV_Calling**
   * calling SVs based on the long-read mapping alignment (by Sniffles, svim, Picky, nanosv, or pbsv)
 * **20.Variant_Calling_Benchmarking**

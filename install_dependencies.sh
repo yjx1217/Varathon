@@ -1,5 +1,5 @@
 #!/bin/bash
-# last update: 2019.11.05
+# last update: 2019.12.06
 set -e -o pipefail
 
 VARATHON_HOME=$(pwd)
@@ -70,7 +70,7 @@ FREEBAYES_VERSION="1.2.0" #
 FREEBAYES_GITHUB_COMMIT_VERSION="d15209e" # committed on 2019.02.14
 FREEBAYES_DOWNLOAD_URL="https://github.com/ekg/freebayes.git"
 
-CLAIRVOYANTE_VERSION="1.02" # released on 2019.02.28 
+#CLAIRVOYANTE_VERSION="1.02" # released on 2019.02.28 
 
 LONGSHOT_VERSION="0.3.4" # released on 2019.05.02
 
@@ -455,19 +455,19 @@ cd $vcflib_dir
 make
 vcflib_dir="$build_dir/freebayes/vcflib/bin"
 
-# --------------- Clairvoyante -----------------   
-cd $build_dir
-echo "Download Clairvoyante-v${CLAIRVOYANTE_VERSION}"
-$miniconda2_dir/conda create -p $build_dir/conda_clairvoyante_env python=2.7 -y
-source $miniconda2_dir/activate $build_dir/conda_clairvoyante_env
-$miniconda2_dir/conda install -y -c bioconda clairvoyante=${CLAIRVOYANTE_VERSION}
-cd $build_dir/conda_clairvoyante_env
-wget https://bootstrap.pypa.io/get-pip.py
-pypy get-pip.py
-pypy -m pip install --no-cache-dir intervaltree==2.1.0
-curl http://www.bio8.cs.hku.hk/trainedModels.tbz | tar -jxf -
-source $miniconda2_dir/deactivate
-clairvoyante_dir="$build_dir/conda_clairvoyante_env/bin"
+# # --------------- Clairvoyante -----------------   
+# cd $build_dir
+# echo "Download Clairvoyante-v${CLAIRVOYANTE_VERSION}"
+# $miniconda2_dir/conda create -p $build_dir/conda_clairvoyante_env python=2.7 -y
+# source $miniconda2_dir/activate $build_dir/conda_clairvoyante_env
+# $miniconda2_dir/conda install -y -c bioconda clairvoyante=${CLAIRVOYANTE_VERSION}
+# cd $build_dir/conda_clairvoyante_env
+# wget https://bootstrap.pypa.io/get-pip.py
+# pypy get-pip.py
+# pypy -m pip install --no-cache-dir intervaltree==2.1.0
+# curl http://www.bio8.cs.hku.hk/trainedModels.tbz | tar -jxf -
+# source $miniconda2_dir/deactivate
+# clairvoyante_dir="$build_dir/conda_clairvoyante_env/bin"
 
 # --------------- longshot -----------------   
 cd $build_dir
@@ -688,7 +688,7 @@ echo "export gatk4_dir=${gatk4_dir}" >> env.sh
 echo "export freebayes_dir=${freebayes_dir}" >> env.sh
 echo "export vcflib_dir=${vcflib_dir}" >> env.sh
 echo "export vt_dir=${vt_dir}" >> env.sh
-echo "export clairvoyante_dir=${clairvoyante_dir}" >> env.sh
+# echo "export clairvoyante_dir=${clairvoyante_dir}" >> env.sh
 echo "export longshot_dir=${longshot_dir}" >> env.sh
 echo "export freec_dir=${freec_dir}" >> env.sh
 echo "export manta_dir=${manta_dir}" >> env.sh
