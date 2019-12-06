@@ -216,7 +216,7 @@ miniconda2_dir="$build_dir/miniconda2/bin"
 $miniconda2_dir/conda config --add channels defaults
 $miniconda2_dir/conda config --add channels bioconda
 $miniconda2_dir/conda config --add channels conda-forge
-$miniconda2_dir/pip install cython numpy==1.13.1
+$miniconda2_dir/pip install cython==0.29.14 numpy==1.13.1
 rm Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh 
 
 # ------------- simuG -------------------
@@ -244,10 +244,10 @@ art_dir="$build_dir/art_bin_MountRainier"
 rm artbin${ART_VERSION}linux64.tgz
 
 # -------------- SimLoRD ----------------
-$miniconda2_dir/conda create -y -p $build_dir/conda_simlord_env python=3 pip numpy scipy cython
+$miniconda2_dir/conda create -y -p $build_dir/conda_simlord_env python=3.6 pip numpy scipy cython
 source $miniconda2_dir/activate $build_dir/conda_simlord_env
-pip install pysam
-pip install dinopy
+pip install pysam==0.15.3
+pip install dinopy==2.0.3
 pip install "simlord==${SIMLORD_VERSION}"
 source $miniconda2_dir/deactivate
 simlord_dir="$build_dir/conda_simlord_env/bin"
