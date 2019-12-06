@@ -115,8 +115,9 @@ foreach my $sample_id (@sample_table) {
 	    system("rm ref.genome.fa-*.ngm");
 	}
     } elsif ($long_read_mapper eq "last") {
-	system("/usr/bin/time -v $last_dir/lastdb -v -P $threads ref.genome.lastdb ref.genome.fa");
-	system("/usr/bin/time -v $last_dir/lastal -r1 -q1 -a0 -b2 -Q1 -P $threads ref.genome.lastdb $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} |gzip -c > $sample_id.maf.gz");
+	system("/usr/bin/time -v $last_dir/lastdb -cR01 -v -P $threads ref.genome.lastdb ref.genome.fa");
+	system("/usr/bin/time -v $last_dir/lastal -C 2 -K 2 -r 1 -q 3 -a 2 -b 1 -Q 1 -i 100M -P $threads ref.genome.lastdb $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} |gzip -c > $sample_id.maf.gz");
+	# system("/usr/bin/time -v $last_dir/lastal -r 1 -q 1 -a 0 -b 2 -Q 1 -i 100M -P $threads ref.genome.lastdb $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} |gzip -c > $sample_id.maf.gz");
 	system("/usr/bin/time -v java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
 	system("/usr/bin/time -v gzip -dc $sample_id.maf.gz | $last_dir/last-split - |gzip -c > $sample_id.lastsplit.maf.gz");
 	system("/usr/bin/time -v gzip -dc $sample_id.lastsplit.maf.gz | $last_dir/maf-convert -f ref.genome.dict sam -r \"ID:$sample_id PL:$long_read_technology SM:$sample_id\" -  > $sample_id.sam");
