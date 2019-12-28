@@ -8,7 +8,7 @@ use Cwd;
 ##############################################################
 #  script: batch_long_read_SV_calling.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2019.09.02
+#  last edited: 2019.12.28
 #  description: run long-read-based SV calling for a batch of samples
 #  example: perl batch_long_read_SV_calling.pl -i Master_Sample_Table.txt -threads 4 -b $batch_id -ref_genome ref_genome.fa  -long_read_mapping_dir ./../01.Long_Read_Mapping -min_mapping_quality 30 -caller sniffles -excluded_chr_list yeast.excluded_chr_list.txt -long_read_technology pacbio
 ##############################################################
@@ -150,7 +150,7 @@ foreach my $sample_id (@sample_table) {
 	    system("rm $sample_id.svsig.gz");
 	}
     } elsif ($caller eq "nanosv") {
-	system("/usr/bin/time -v $windowmasker_dir/windowmasker -checkdup true -mk_counts -in ref.genome.fa -out ref.genome.masking_library.ustat");
+	system("/usr/bin/time -v $windowmasker_dir/windowmasker -mk_counts -in ref.genome.fa -out ref.genome.masking_library.ustat");
 	system("/usr/bin/time -v $windowmasker_dir/windowmasker -ustat ref.genome.masking_library.ustat -in ref.genome.fa -out ref.genome.softmask.fa -outfmt fasta -dust true");
 	system("perl $VARATHON_HOME/scripts/softmask2hardmask.pl -i ref.genome.softmask.fa -o ref.genome.hardmask.fa");
 	system("perl $VARATHON_HOME/scripts/find_motif_in_genome.pl -i ref.genome.hardmask.fa -m $VARATHON_HOME/data/hardmask.motif.txt -p ref.genome.hardmask");
