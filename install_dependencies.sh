@@ -445,9 +445,78 @@ rm gatk-${GATK4_VERSION}.zip
 cd $build_dir
 echo "Download Freebayes-v${FREEBAYES_VERSION}"
 freebayes_dir="$build_dir/freebayes"
-git clone --recursive $FREEBAYES_DOWNLOAD_URL
+git clone $FREEBAYES_DOWNLOAD_URL
 cd $freebayes_dir
 git checkout -f -q $FREEBAYES_GITHUB_COMMIT_VERSION
+
+git clone --recursive https://github.com/walaj/SeqLib.git
+cd SeqLib
+git checkout -f -q "5941c68"
+cd ..
+
+git clone --recursive https://github.com/ekg/bamtools.git
+cd bamtools
+git checkout -f -q "e77a43f"
+cd ..
+
+git clone --recursive https://github.com/ekg/intervaltree.git
+cd intervaltree
+git checkout -f -q "dbb4c51"
+cd ..
+
+cd test 
+git clone --recursive https://github.com/illusori/bash-tap.git
+cd bash-tap
+git checkout -f -q "c38fbfa"
+cd ..
+
+git clone --recursive https://github.com/ingydotnet/test-simple-bash.git
+cd test-simple-bash
+git checkout -f -q "124673f"
+cd ..
+cd ..
+
+git clone https://github.com/vcflib/vcflib.git
+cd vcflib
+git checkout -f -q "5e3ce04" 
+git clone https://github.com/ekg/fastahack.git
+cd fastahack
+git checkout -f -q "c68cebb"
+cd ..
+git clone https://github.com/ekg/filevercmp.git
+cd filevercmp
+git checkout -f -q "1a9b779"
+cd ..
+git clone https://github.com/ekg/fsom.git
+cd fsom
+git checkout -f -q "a6ef318"
+cd ..
+git clone https://github.com/google/googletest.git
+cd googletest
+git checkout -f -q "d225acc"
+cd ..
+git clone https://github.com/ekg/intervaltree.git
+cd intervaltree
+git checkout -f -q "dbb4c51"
+cd ..
+git clone https://github.com/ekg/multichoose.git
+cd multichoose
+git checkout -f -q "73d35da"
+cd ..
+git clone https://github.com/ekg/smithwaterman.git
+cd smithwaterman
+git checkout -f -q "84c08d7"
+cd ..
+git clone https://github.com/ekg/tabixpp.git
+cd tabixpp
+git checkout -f -q "80012f8"
+git clone https://github.com/samtools/htslib.git
+cd htslib
+git checkout -f -q "0f298ce"
+cd ..
+cd ..
+cd ..
+
 make
 freebayes_dir="$build_dir/freebayes/bin"
 vcflib_dir="$build_dir/freebayes/vcflib"
