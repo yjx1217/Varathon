@@ -8,12 +8,13 @@ use Cwd;
 ##############################################################
 #  script: batch_short_read_SV_calling.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2019.04.25
+#  last edited: 2020.04.27
 #  description: run short-read-based SV calling for a batch of samples
 #  example: perl batch_short_read_SV_calling.pl -i Master_Sample_Table.txt -threads 4 -b $batch_id -ref_genome ref_genome.fa  -short_read_mapping_dir ./../01.Short_Read_Mapping -min_mapping_quality 20 -caller manta  -ploidy 1 -excluded_chr_list yeast.excluded_chr_list.txt
 ##############################################################
 
 my $VARATHON_HOME = $ENV{VARATHON_HOME};
+my $java_dir = $ENV{java_dir};
 my $samtools_dir = $ENV{samtools_dir};
 my $picard_dir = $ENV{picard_dir};
 my $manta_dir = $ENV{manta_dir};
@@ -89,7 +90,7 @@ foreach my $sample_id (@sample_table) {
     }
     ## index reference sequence
     system("$samtools_dir/samtools faidx ref.genome.fa");
-    system("java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
     ## filter bam file by mapping quality
     system("$samtools_dir/samtools view -b -q $min_mapping_quality $base_dir/$short_read_mapping_dir/$batch_id/$sample_id/$sample_id.realn.bam  >$sample_id.filtered.bam");
     # index the filtered.bam file
@@ -100,14 +101,14 @@ foreach my $sample_id (@sample_table) {
 
     # SV calling 
     if ($caller eq "manta") {
-	system("$manta_dir/configManta.py --bam $sample_id.filtered.bam --referenceFasta ref.genome.fa --runDir ${sample_id}_manta_out");
-	system("./${sample_id}_manta_out/runWorkflow.py -m local -j $threads");
+	system("/usr/bin/time -v $manta_dir/configManta.py --bam $sample_id.filtered.bam --referenceFasta ref.genome.fa --runDir ${sample_id}_manta_out");
+	system("/usr/bin/time -v ./${sample_id}_manta_out/runWorkflow.py -m local -j $threads");
 	system("cp ./${sample_id}_manta_out/results/variants/diploidSV.vcf.gz $sample_id.manta.SV.vcf.gz");
 	system("gunzip $sample_id.manta.SV.vcf.gz");
 	#system("cp ./${sample_id}_manta_out/results/variants/diploidSV.vcf.gz.tbi $sample_id.manta.SV.vcf.gz.tbi");
     } elsif ($caller eq "delly") {
-	system("$delly_dir/delly call -g ref.genome.fa -o $sample_id.delly.SV.bcf $sample_id.filtered.bam");
-	system("$bcftools_dir/bcftools view $sample_id.delly.SV.bcf > $sample_id.delly.SV.vcf");
+	system("/usr/bin/time -v $delly_dir/delly call -g ref.genome.fa -o $sample_id.delly.SV.bcf $sample_id.filtered.bam");
+	system("/usr/bin/time -v $bcftools_dir/bcftools view $sample_id.delly.SV.bcf > $sample_id.delly.SV.vcf");
 	#system("$tabix_dir/bgzip -c $sample_id.delly.SV.vcf > $sample_id.delly.SV.vcf.gz");
 	#system("$tabix_dir/tabix -p vcf $sample_id.delly.SV.vcf.gz");
     } else {

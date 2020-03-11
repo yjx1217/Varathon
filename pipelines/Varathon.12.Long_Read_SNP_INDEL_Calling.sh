@@ -5,7 +5,7 @@ set -e -o pipefail
 # load environment variables for Varathon
 source ./../../env.sh
 PATH="$samtools_dir:$PATH"
-source $miniconda2_dir/activate $build_dir/conda_clairvoyante_env
+source $miniconda2_dir/activate $build_dir/conda_clair_env
 
 ###########################################
 # set project-specific variables
@@ -17,7 +17,7 @@ long_read_technology="pacbio" # The long-read sequencing technology used for the
 min_mapping_quality=30 # The minimal mapping quality to use for filtering short-read mapping alignment. Default = 30.
 min_variant_calling_quality=30 # The minimal variant calling quality to use for filtering short-read mapping alignment. Default = 30.
 ploidy=2; # The ploidy status of samples in the processing batch. Default = 2.
-snp_indel_caller="longshot" # The specific caller used for SNP & INDEL calling: "longshot" (SNP only) or "clairvoyante". Default = "longshot".
+snp_indel_caller="longshot" # The specific caller used for SNP & INDEL calling: "longshot" or "clair". Default = "longshot".
 threads=4 # The number of threads to use. Defualt = 4.
 debug="no" # Whether to keep intermediate files for debuging. Use "yes" if prefer to keep intermediate files, otherwise use "no". Default = "no".
 ###########################################

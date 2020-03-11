@@ -8,12 +8,13 @@ use Cwd;
 ##############################################################
 #  script: batch_short_read_mapping.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2019.04.14
+#  last edited: 2020.04.27
 #  description: run short-read mapping for a batch of samples
 #  example: perl batch_short_read_mapping.pl -i Master_Sample_Table.txt -b $batch_id -threads 4  -ref_genome ref_genome.fa -short_read_dir ./../00.Offspring_Reads -min_mapping_quality 30 -excluded_chr_list yeast.excluded_chr_list.txt
 ##############################################################
 
 my $VARATHON_HOME = $ENV{VARATHON_HOME};
+my $java_dir = $ENV{java_dir};
 my $trimmomatic_dir = $ENV{trimmomatic_dir};
 my $bwa_dir = $ENV{bwa_dir};
 my $samtools_dir = $ENV{samtools_dir};
@@ -96,7 +97,7 @@ foreach my $sample_id (@sample_table) {
     system("ln -s $adapter adapter.fa");
     system("ln -s $R1_read_file $sample_id.R1.raw.fq.gz");
     system("ln -s $R2_read_file $sample_id.R2.raw.fq.gz");
-    system("/usr/bin/time -v java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $trimmomatic_dir/trimmomatic.jar PE -threads $threads -phred33 $sample_id.R1.raw.fq.gz  $sample_id.R2.raw.fq.gz $sample_id.R1.trimmed.PE.fq.gz $sample_id.R1.trimmed.SE.fq.gz  $sample_id.R2.trimmed.PE.fq.gz $sample_id.R2.trimmed.SE.fq.gz  ILLUMINACLIP:adapter.fa:2:30:10  SLIDINGWINDOW:5:20 MINLEN:36");
+    system("/usr/bin/time -v $java_dir/java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $trimmomatic_dir/trimmomatic.jar PE -threads $threads -phred33 $sample_id.R1.raw.fq.gz  $sample_id.R2.raw.fq.gz $sample_id.R1.trimmed.PE.fq.gz $sample_id.R1.trimmed.SE.fq.gz  $sample_id.R2.trimmed.PE.fq.gz $sample_id.R2.trimmed.SE.fq.gz  ILLUMINACLIP:adapter.fa:2:30:10  SLIDINGWINDOW:5:20 MINLEN:36");
     system("rm $sample_id.R1.raw.fq.gz");
     system("rm $sample_id.R2.raw.fq.gz");
     system("rm $sample_id.R1.trimmed.SE.fq.gz");
@@ -125,29 +126,29 @@ foreach my $sample_id (@sample_table) {
     }
     ## index reference sequence
     system("$samtools_dir/samtools faidx ref.genome.fa");
-    system("java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
     ## filter bam file by mapping quality
     system("$samtools_dir/samtools view -bS -q $min_mapping_quality $sample_id.sam >$sample_id.bam");
     if ($debug eq "no") {
 	system("rm $sample_id.sam");
     }
     ## sort bam file by picard-tools: SortSam
-    system("java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar SortSam -INPUT $sample_id.bam -OUTPUT $sample_id.sort.bam -SORT_ORDER coordinate");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar SortSam -INPUT $sample_id.bam -OUTPUT $sample_id.sort.bam -SORT_ORDER coordinate");
     if ($debug eq "no") {
 	system("rm $sample_id.bam");
     }
     ## fixmate
-    system("java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar FixMateInformation -INPUT $sample_id.sort.bam -OUTPUT $sample_id.fixmate.bam");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar FixMateInformation -INPUT $sample_id.sort.bam -OUTPUT $sample_id.fixmate.bam");
     if ($debug eq "no") {
 	system("rm $sample_id.sort.bam");
     }
     ## add or replace read groups and sort
-    system("java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar AddOrReplaceReadGroups -INPUT $sample_id.fixmate.bam -OUTPUT $sample_id.rdgrp.bam -SORT_ORDER coordinate -RGID $sample_id -RGLB $sample_id -RGPL 'Illumina' -RGPU $sample_id -RGSM $sample_id -RGCN 'RGCN'");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar AddOrReplaceReadGroups -INPUT $sample_id.fixmate.bam -OUTPUT $sample_id.rdgrp.bam -SORT_ORDER coordinate -RGID $sample_id -RGLB $sample_id -RGPL 'Illumina' -RGPU $sample_id -RGSM $sample_id -RGCN 'RGCN'");
     if ($debug eq "no") {
 	system("rm $sample_id.fixmate.bam");
     }
     # Picard tools remove duplicates
-    system("java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar MarkDuplicates -INPUT $sample_id.rdgrp.bam -REMOVE_DUPLICATES true -METRICS_FILE $sample_id.dedup.matrics -OUTPUT $sample_id.dedup.bam"); 
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar MarkDuplicates -INPUT $sample_id.rdgrp.bam -REMOVE_DUPLICATES true -METRICS_FILE $sample_id.dedup.matrics -OUTPUT $sample_id.dedup.bam"); 
     if ($debug eq "no") {
 	system("rm $sample_id.rdgrp.bam");
     }
@@ -155,27 +156,27 @@ foreach my $sample_id (@sample_table) {
     system("$samtools_dir/samtools index $sample_id.dedup.bam");
     # GATK local realign
     # find realigner targets
-    system("java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $gatk3_dir/gatk3.jar -nt $threads -R ref.genome.fa -T RealignerTargetCreator -I $sample_id.dedup.bam  -o $sample_id.realn.intervals");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $gatk3_dir/gatk3.jar -nt $threads -R ref.genome.fa -T RealignerTargetCreator -I $sample_id.dedup.bam  -o $sample_id.realn.intervals");
     # run realigner
-    system("java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $gatk3_dir/gatk3.jar -R ref.genome.fa -T IndelRealigner -I $sample_id.dedup.bam -targetIntervals $sample_id.realn.intervals -o $sample_id.realn.bam");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $gatk3_dir/gatk3.jar -R ref.genome.fa -T IndelRealigner -I $sample_id.dedup.bam -targetIntervals $sample_id.realn.intervals -o $sample_id.realn.bam");
     if ($debug eq "no") {
-	system("rm $sample_id.dedup.bam");
-	system("rm $sample_id.dedup.bam.bai");
-	system("rm $sample_id.dedup.matrics");
+    	system("rm $sample_id.dedup.bam");
+    	system("rm $sample_id.dedup.bam.bai");
+    	system("rm $sample_id.dedup.matrics");
     }
-    # index final  bam file
+    # index final the bam file
     system("$samtools_dir/samtools index $sample_id.realn.bam");
     if ($debug eq "no") {
-	system("rm $sample_id.realn.intervals");
+    	system("rm $sample_id.realn.intervals");
     }
     # generate samtools mpileup 
-    # system("$samtools_dir/samtools mpileup -Q 0 -C 50 -q $min_mapping_quality -f ref.genome.fa  $sample_id.realn.bam |gzip -c >${sample_id}.mpileup.gz");	
+   system("$samtools_dir/samtools mpileup -Q 0 -C 50 -q $min_mapping_quality -f ref.genome.fa  $sample_id.realn.bam |gzip -c >${sample_id}.mpileup.gz");	
     # compute basic alignment statistics by samtools
     system("$samtools_dir/samtools flagstat $sample_id.realn.bam >$sample_id.samstat");
     # calculate per-base depth
     system("$samtools_dir/samtools depth -aa $sample_id.realn.bam |gzip -c >$sample_id.depth.txt.gz");
     # compute insert size statistics
-    # system("java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CollectInsertSizeMetrics -INPUT $sample_id.realn.bam -OUTPUT $sample_id.insert_size_metrics.txt -H $sample_id.insert_size_histogram.pdf -M 0.5");
+    # system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CollectInsertSizeMetrics -INPUT $sample_id.realn.bam -OUTPUT $sample_id.insert_size_metrics.txt -H $sample_id.insert_size_histogram.pdf -M 0.5");
     # calculate read mapping coverage statistics
     system("perl $VARATHON_HOME/scripts/summarize_mapping_coverage.pl -r ref.genome.fa -s $sample_id.samstat -d $sample_id.depth.txt.gz -c 5 -t $sample_id -o $sample_id.coverage_summary.txt");
     if ($mapping_count == 1) {

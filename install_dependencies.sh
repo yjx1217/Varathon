@@ -1,5 +1,5 @@
 #!/bin/bash
-# last update: 2019.12.06
+# last update: 2020.04.27
 set -e -o pipefail
 
 VARATHON_HOME=$(pwd)
@@ -17,7 +17,7 @@ SRA_DOWNLOAD_URL="https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/${SRA_VERSION}/srat
 ART_VERSION="mountrainier2016.06.05" # released on 2016.06.05
 ART_DOWNLOAD_URL="https://www.niehs.nih.gov/research/resources/assets/docs/artbin${ART_VERSION}linux64.tgz"
 
-SIMLORD_VERSION="1.0.2" #
+SIMLORD_VERSION="1.0.2" # released on 2018.06.30
 
 DEEPSIMULATOR_VERSION="1.5.0" # released on 2019.06.16 
 DEEPSIMULATOR_GITHUB_COMMIT_VERSION="3c867c2" # committed on 2019.11.02
@@ -41,7 +41,7 @@ BWA_DOWNLOAD_URL="https://github.com/lh3/bwa/releases/download/v${BWA_VERSION}/b
 LAST_VERSION="979" # released on 
 LAST_DOWNLOAD_URL="http://last.cbrc.jp/last-${LAST_VERSION}.zip"
 
-NGMLR_VERSION="0.2.7" # 
+NGMLR_VERSION="0.2.7" # released on 2018.06.25
 NGMLR_DOWNLOAD_URL="https://github.com/philres/ngmlr/releases/download/v${NGMLR_VERSION}/ngmlr-${NGMLR_VERSION}-linux-x86_64.tar.gz"
 
 MINIMAP2_VERSION="2.16" # released on 2019.02.28
@@ -70,11 +70,11 @@ FREEBAYES_VERSION="1.2.0" #
 FREEBAYES_GITHUB_COMMIT_VERSION="d15209e" # committed on 2019.02.14
 FREEBAYES_DOWNLOAD_URL="https://github.com/ekg/freebayes.git"
 
-#CLAIRVOYANTE_VERSION="1.02" # released on 2019.02.28 
+CLAIR_VERSION="2.1.0" # released on 2020.04.15
 
 LONGSHOT_VERSION="0.3.4" # released on 2019.05.02
 
-FREEC_VERSION="11.4" #
+FREEC_VERSION="11.4" # released on 2018.04.28
 FREEC_DOWNLOAD_URL="https://github.com/BoevaLab/FREEC/archive/v${FREEC_VERSION}.tar.gz"
 
 MANTA_VERSION="1.5.0" # released on 2018.11.12
@@ -83,20 +83,20 @@ MANTA_DOWNLOAD_URL="https://github.com/Illumina/manta/releases/download/v${MANTA
 DELLY_VERSION="0.8.1" # released on 2019.02.04
 DELLY_DOWNLOAD_URL="https://github.com/dellytools/delly/releases/download/v${DELLY_VERSION}/delly_v${DELLY_VERSION}_linux_x86_64bit"
 
-SVIM_VERSION="1.0.0" # 
+SVIM_VERSION="1.0.0" # released on 2019.04.29
 SVIM_GITHUB_COMMIT_VERSION="b72e631" # committed on 2019.05.02
 
-SNIFFLES_VERSION="1.0.11" #
+SNIFFLES_VERSION="1.0.11" # released on 2019.01.30
 SNIFFLES_GITHUB_COMMIT_VERSION="e5d5150" # committed on 2019.03.30
 SNIFFLES_DOWNLOAD_URL="https://github.com/fritzsedlazeck/Sniffles/archive/${SNIFFLES_VERSION}.tar.gz"
 
 PBSV_VERSION="2.2.0" # released on 2019.02.28
 
-PICKY_VERSION="0.2.a"
+PICKY_VERSION="0.2.a" # released on 2018.07.17   
 PICKY_GITHUB_COMMIT_VERSION="34b85ac" # committed on 2018.07.17
 PICKY_DOWNLOAD_URL="https://github.com/TheJacksonLaboratory/Picky.git"
 
-NANOSV_VERSION="1.2.3"
+NANOSV_VERSION="1.2.3" # released on 2019.04.09
 NANOSV_GITHUB_COMMIT_VERSION="c1ae30c" # committed on 2019.04.09
 NANOSV_DOWNLOAD_URL="https://github.com/mroosmalen/nanosv.git"
 
@@ -115,7 +115,7 @@ BCFTOOLS_DOWNLOAD_URL="https://github.com/samtools/bcftools/releases/download/${
 MINICONDA2_VERSION="4.5.11" # released on 2018.09.04
 MINICONDA2_DOWNLOAD_URL="https://repo.continuum.io/miniconda/Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh"
 
-BEDTOOLS_VERSION="2.27.1"
+BEDTOOLS_VERSION="2.27.1" # released on 2017.12.15
 BEDTOOLS_DOWNLOAD_URL="https://github.com/arq5x/bedtools2/releases/download/v${BEDTOOLS_VERSION}/bedtools-${BEDTOOLS_VERSION}.tar.gz"
 
 BLAST_VERSION="2.2.31"
@@ -172,7 +172,7 @@ tidy_version () {
 
 # ---------- set Perl & R environment variables -------------
 
-#PYTHONPATH="$build_dir"
+PYTHONPATH=""
 PERL5LIB="$build_dir:$PERL5LIB"
 PERL5LIB="$build_dir/cpanm/perlmods/lib/perl5:$PERL5LIB"
 R_LIBS="$build_dir/R_libs:$R_LIBS"
@@ -375,7 +375,7 @@ rm minimap2-${MINIMAP2_VERSION}.tar.bz2
 # --------------- pbmm2 -----------------
 cd $build_dir
 echo "Download pbmm2-v${PBMM2_VERSION}"
-$miniconda2_dir/conda create -y -p $build_dir/conda_pbmm2_env
+$miniconda2_dir/conda create -y -p $build_dir/conda_pbmm2_env python=3.6
 source $miniconda2_dir/activate $build_dir/conda_pbmm2_env
 $miniconda2_dir/conda install -y -c bioconda/label/cf201901 pbmm2
 source $miniconda2_dir/deactivate
@@ -524,24 +524,35 @@ cd $vcflib_dir
 make
 vcflib_dir="$build_dir/freebayes/vcflib/bin"
 
-# # --------------- Clairvoyante -----------------   
-# cd $build_dir
-# echo "Download Clairvoyante-v${CLAIRVOYANTE_VERSION}"
-# $miniconda2_dir/conda create -p $build_dir/conda_clairvoyante_env python=2.7 -y
-# source $miniconda2_dir/activate $build_dir/conda_clairvoyante_env
-# $miniconda2_dir/conda install -y -c bioconda clairvoyante=${CLAIRVOYANTE_VERSION}
-# cd $build_dir/conda_clairvoyante_env
-# wget https://bootstrap.pypa.io/get-pip.py
-# pypy get-pip.py
-# pypy -m pip install --no-cache-dir intervaltree==2.1.0
-# curl http://www.bio8.cs.hku.hk/trainedModels.tbz | tar -jxf -
-# source $miniconda2_dir/deactivate
-# clairvoyante_dir="$build_dir/conda_clairvoyante_env/bin"
+# --------------- Clair -----------------   
+cd $build_dir
+echo "Download Clair-v${CLAIR_VERSION}"
+$miniconda2_dir/conda create -p $build_dir/conda_clair_env python=3.6 -y
+source $miniconda2_dir/activate $build_dir/conda_clair_env
+$miniconda2_dir/conda install -y -c bioconda clair=${CLAIR_VERSION}
+cd $build_dir/conda_clair_env
+pypy3 -m ensurepip
+pypy3 -m pip install --no-cache-dir intervaltree==3.0.2
+mkdir trained_models && cd trained_models
+mkdir ont && cd ont
+wget --no-check-certificate http://www.bio8.cs.hku.hk/clair_models/ont/122HD34.tar
+tar -xf 122HD34.tar
+cd ..
+mkdir pacbio && cd pacbio
+wget --no-check-certificate http://www.bio8.cs.hku.hk/clair_models/pacbio/clr/1234567.tar
+tar -xf 1234567.tar
+cd ..
+mkdir illumina && cd illumina
+wget --no-check-certificate http://www.bio8.cs.hku.hk/clair_models/illumina/12345.tar
+tar -xf 12345.tar
+cd ..
+source $miniconda2_dir/deactivate
+clair_dir="$build_dir/conda_clair_env/bin"
 
 # --------------- longshot -----------------   
 cd $build_dir
 echo "Download longshot-v${LONGSHOT_VERSION}"
-$miniconda2_dir/conda create -y -p $build_dir/conda_longshot_env 
+$miniconda2_dir/conda create -y -p $build_dir/conda_longshot_env python=3.6
 source $miniconda2_dir/activate $build_dir/conda_longshot_env
 $miniconda2_dir/conda install -y -c bioconda longshot=v${LONGSHOT_VERSION}
 source $miniconda2_dir/deactivate
@@ -583,7 +594,7 @@ delly_dir="$build_dir/delly-${DELLY_VERSION}"
 # ------------------ SVIM ---------------------
 cd $build_dir
 echo "Download SVIM-v${SVIM_VERSION}"
-$miniconda2_dir/conda create -y -p $build_dir/conda_svim_env 
+$miniconda2_dir/conda create -y -p $build_dir/conda_svim_env python=3.6 
 source $miniconda2_dir/activate $build_dir/conda_svim_env
 $miniconda2_dir/conda install -y -c bioconda svim=${SVIM_VERSION}
 source $miniconda2_dir/deactivate
@@ -605,7 +616,7 @@ rm Sniffles-${SNIFFLES_VERSION}.tar.gz
 
 # ------------------ PBSV ---------------------
 cd $build_dir
-$miniconda2_dir/conda create -y -p $build_dir/conda_pbsv_env
+$miniconda2_dir/conda create -y -p $build_dir/conda_pbsv_env python=3.6
 source $miniconda2_dir/activate $build_dir/conda_pbsv_env
 $miniconda2_dir/conda install -y -c bioconda pbsv=${PBSV_VERSION}
 source $miniconda2_dir/deactivate
@@ -621,7 +632,7 @@ picky_dir="$build_dir/Picky/src"
 
 # ------------------ NANOSV ---------------------
 cd $build_dir
-$miniconda2_dir/conda create -y -p $build_dir/conda_nanosv_env
+$miniconda2_dir/conda create -y -p $build_dir/conda_nanosv_env python=3.6
 source $miniconda2_dir/activate $build_dir/conda_nanosv_env
 $miniconda2_dir/conda install -y -c bioconda nanosv=${NANOSV_VERSION}
 source $miniconda2_dir/deactivate
@@ -693,38 +704,10 @@ parallel_dir="$build_dir/parallel-${PARALLEL_VERSION}/bin"
 cd ..
 rm parallel_v${PARALLEL_VERSION}.tar.bz2
 
-#############
-# # --------------- mummer4 ------------------
-# cd $build_dir
-# echo "Download mummer-v${MUMMER_VERSION}"
-# download $MUMMER_DOWNLOAD_URL "mummer-${MUMMER_VERSION}.tar.gz"
-# tar -zxf mummer-${MUMMER_VERSION}.tar.gz
-# mummer4_dir="$build_dir/mummer-${MUMMER_VERSION}"
-# cd $mummer4_dir
-# ./configure
-# make
-# PATH=$mummer4_dir:$PATH
-# cd $build_dir
-# rm mummer-${MUMMER_VERSION}.tar.gz
-
-# # --------------- gnuplot ------------------
-# cd $build_dir
-# echo "Download gnuplot-v${GNUPLOT_VERSION}"
-# download $GNUPLOT_DOWNLOAD_URL "gnuplot-${GNUPLOT_VERSION}.tar.gz"
-# tar -zxf gnuplot-${GNUPLOT_VERSION}.tar.gz
-# cd "$build_dir/gnuplot-${GNUPLOT_VERSION}"
-# ./configure --prefix="$build_dir/gnuplot-${GNUPLOT_VERSION}" --disable-wxwidgets
-# make
-# make install
-# gnuplot_dir="$build_dir/gnuplot-${GNUPLOT_VERSION}/bin"
-# cd $build_dir
-# rm gnuplot-${GNUPLOT_VERSION}.tar.gz
-# PATH="$gnuplot_dir:${PATH}"
-
 # Configure executable paths
 
 cd $VARATHON_HOME
-
+echo ""
 echo "Configuring executable paths ..."
 
 echo "export VARATHON_HOME=${VARATHON_HOME}" > env.sh
@@ -737,7 +720,6 @@ echo "export simuG_dir=${simuG_dir}" >> env.sh
 echo "export sra_dir=${sra_dir}" >> env.sh
 echo "export art_dir=${art_dir}" >> env.sh
 echo "export simlord_dir=${simlord_dir}" >> env.sh
-echo "export nanosim_dir=${nanosim_dir}" >> env.sh
 echo "export deepsimulator_dir=${deepsimulator_dir}" >> env.sh
 echo "export trimmomatic_dir=${trimmomatic_dir}" >> env.sh
 echo "export porechop_dir=${porechop_dir}" >> env.sh
@@ -757,7 +739,7 @@ echo "export gatk4_dir=${gatk4_dir}" >> env.sh
 echo "export freebayes_dir=${freebayes_dir}" >> env.sh
 echo "export vcflib_dir=${vcflib_dir}" >> env.sh
 echo "export vt_dir=${vt_dir}" >> env.sh
-# echo "export clairvoyante_dir=${clairvoyante_dir}" >> env.sh
+echo "export clair_dir=${clair_dir}" >> env.sh
 echo "export longshot_dir=${longshot_dir}" >> env.sh
 echo "export freec_dir=${freec_dir}" >> env.sh
 echo "export manta_dir=${manta_dir}" >> env.sh
@@ -775,25 +757,65 @@ echo "export windowmasker_dir=${windowmasker_dir}" >> env.sh
 echo "export bedtools_dir=${bedtools_dir}" >> env.sh
 
 
+# test java configuration: requireds java 1.8 
+echo ""
+echo "##########################################"
+echo "Testing java configuration ..."
+echo ""
+java_bin=""
+if type -p java
+then 
+    java_bin=$(which java)
+    echo "found java executable in PATH: $java_bin"
+elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]]
+then 
+    java_bin="$JAVA_HOME/bin/java"
+    echo "found java executable in JAVA_HOME: $java_bin" 
+else 
+    echo "";
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+    echo "Failed to detect Java installation in the system!"
+    echo "Please install java 1.8, which is a dependency of Varathon!\n";
+    echo "After the java installation, please manually set the directory path to java 1.8 executable on the last line of the env.sh file generated by this installation script!"
+    echo "export java_dir=" >> env.sh
+fi  
+
+if [[ -n "$java_bin" ]]
+then
+    java_version=$("$java_bin" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+    echo "detected java_version: $java_version"
+    if [ $(tidy_version "$java_version") -eq $(tidy_version "1.8") ]
+    then
+	java_dir=$(dirname $java_bin)
+	echo "export java_dir=${java_dir}" >> env.sh
+        echo "You have the correct java version for Varathon! Varathon will take care of the configuration."
+    else
+	echo "";
+	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+	echo "Your java version is not the version required by Varathon (java v1.8)!"
+        echo "Please manually set the directory path to java 1.8 executable on the last line of the env.sh file generated by this installation script!"
+	echo "export java_dir=" >> env.sh
+    fi
+fi
+
 echo ""
 # echo "uncompress large supporting files ..."
 # gunzip $VARATHON_HOME/data/*.gz
 
-
 echo "The installation of all dependencies is complete!"
 echo ""
 echo ""
-
-
 
 ############################
 # checking Bash exit status
 
 if [ $? -eq 0 ]
 then
+    echo "#######################################################################"
     echo ""
     echo "Varathon message: This bash script has been successfully processed! :)"
     echo ""
+    echo "#######################################################################"
     echo ""
     exit 0
 fi

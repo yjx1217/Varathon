@@ -8,12 +8,13 @@ use Cwd;
 ##############################################################
 #  script: batch_long_read_mapping.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2019.09.02
+#  last edited: 2020.04.27
 #  description: run long-read mapping for a batch of samples
 #  example: perl batch_long_read_mapping.pl -i Master_Sample_Table.txt -b $batch_id -threads 4  -ref_genome ref_genome.fa -long_read_dir ./../00.Long_Reads -long_read_technology pacbio -long_read_mapper minimap2 -min_mapping_quality 30 -excluded_chr_list yeast.excluded_chr_list.txt
 ##############################################################
 
 my $VARATHON_HOME = $ENV{VARATHON_HOME};
+my $java_dir = $ENV{java_dir};
 my $minimap2_dir = $ENV{minimap2_dir};
 my $ngmlr_dir = $ENV{ngmlr_dir};
 my $last_dir = $ENV{last_dir};
@@ -118,7 +119,7 @@ foreach my $sample_id (@sample_table) {
 	system("/usr/bin/time -v $last_dir/lastdb -cR01 -v -P $threads ref.genome.lastdb ref.genome.fa");
 	system("/usr/bin/time -v $last_dir/lastal -C 2 -K 2 -r 1 -q 3 -a 2 -b 1 -Q 1 -i 100M -P $threads ref.genome.lastdb $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} |gzip -c > $sample_id.maf.gz");
 	# system("/usr/bin/time -v $last_dir/lastal -r 1 -q 1 -a 0 -b 2 -Q 1 -i 100M -P $threads ref.genome.lastdb $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} |gzip -c > $sample_id.maf.gz");
-	system("/usr/bin/time -v java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
+	system("/usr/bin/time -v $java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
 	system("/usr/bin/time -v gzip -dc $sample_id.maf.gz | $last_dir/last-split - |gzip -c > $sample_id.lastsplit.maf.gz");
 	system("/usr/bin/time -v gzip -dc $sample_id.lastsplit.maf.gz | $last_dir/maf-convert -f ref.genome.dict sam -r \"ID:$sample_id PL:$long_read_technology SM:$sample_id\" -  > $sample_id.sam");
 	system("rm ref.genome.dict");
@@ -141,7 +142,7 @@ foreach my $sample_id (@sample_table) {
     if ($long_read_mapper =~ /(minimap2|ngmlr|pbmm2|last)/) {
 	## index reference sequence
 	system("$samtools_dir/samtools faidx ref.genome.fa");
-	system("java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
+	system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
 	if ($long_read_mapper =~ /(minimap2|ngmlr|last)/) {
 	    ## filter bam file by mapping quality
 	    system("$samtools_dir/samtools view -bS -q $min_mapping_quality $sample_id.sam >$sample_id.bam");
@@ -149,7 +150,7 @@ foreach my $sample_id (@sample_table) {
 		system("rm $sample_id.sam");
 	    }
 	    ## sort bam file by picard-tools: SortSam
-	    system("java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar SortSam -INPUT $sample_id.bam -OUTPUT $sample_id.sort.bam -SORT_ORDER coordinate -VALIDATION_STRINGENCY LENIENT -MAX_RECORDS_IN_RAM 50000");
+	    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar SortSam -INPUT $sample_id.bam -OUTPUT $sample_id.sort.bam -SORT_ORDER coordinate -VALIDATION_STRINGENCY LENIENT -MAX_RECORDS_IN_RAM 50000");
 	} else {
 	    system("$samtools_dir/samtools view -bS -q $min_mapping_quality $sample_id.bam >$sample_id.sort.bam");
 	}
@@ -162,7 +163,7 @@ foreach my $sample_id (@sample_table) {
 	    }
 	}
 	# Picard tools remove duplicates (majorly for amplicon sequencing)
-	system("java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar MarkDuplicates -INPUT $sample_id.sort.bam -REMOVE_DUPLICATES true -METRICS_FILE $sample_id.dedup.matrics -VALIDATION_STRINGENCY LENIENT -OUTPUT $sample_id.dedup.bam"); 
+	system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar MarkDuplicates -INPUT $sample_id.sort.bam -REMOVE_DUPLICATES true -METRICS_FILE $sample_id.dedup.matrics -VALIDATION_STRINGENCY LENIENT -OUTPUT $sample_id.dedup.bam"); 
 	if ($debug eq "no") {
 	    system("rm $sample_id.sort.bam");
 	    system("rm $sample_id.dedup.matrics");

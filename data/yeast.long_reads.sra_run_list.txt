@@ -1,0 +1,2 @@
+# SRA_run_id    sample_name
+SRR6823436	yeast_BY4742

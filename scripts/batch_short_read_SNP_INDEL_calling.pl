@@ -8,7 +8,7 @@ use Cwd;
 ##############################################################
 #  script: batch_short_read_SNP_INDEL_calling.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2019.04.14
+#  last edited: 2020.05.08
 #  description: run short-read-based SNP & INDEL calling for a batch of samples
 #  example: perl batch_short_read_SNP_INDEL_calling.pl -i Master_Sample_Table.txt -threads 4 -b $batch_id -ref_genome ref_genome.fa  -short_read_mapping_dir ./../01.Short_Read_Mapping -min_mapping_quality 30 -min_variant_calling_quality 30 -caller GATK4  -ploidy 1 -excluded_chr_list yeast.excluded_chr_list.txt
 ##############################################################
@@ -16,14 +16,13 @@ use Cwd;
 my $VARATHON_HOME = $ENV{VARATHON_HOME};
 my $samtools_dir = $ENV{samtools_dir};
 my $picard_dir = $ENV{picard_dir};
-my $clairvoyante_dir = $ENV{clairvoyante_dir};
+my $clair_dir = $ENV{clair_dir};
 my $gatk4_dir = $ENV{gatk4_dir};
 my $freebayes_dir = $ENV{freebayes_dir};
 my $parallel_dir = $ENV{parallel_dir};
 my $vt_dir = $ENV{vt_dir};
 my $vcflib_dir = $ENV{vcflib_dir};
 my $tabix_dir = $ENV{tabix_dir};
-#my $bedtools_dir = $ENV{bedtools_dir};
 my $sample_table = "Master_Sample_Table.txt";
 my $batch_id;
 my $threads = 1;
@@ -110,14 +109,20 @@ foreach my $sample_id (@sample_table) {
     } elsif ($caller eq "freebayes") {
 	system("/usr/bin/time -v python2 $freebayes_dir/../scripts/fasta_generate_regions.py ref.genome.fa.fai 100000 > $sample_id.region.txt");
 	system("cat $sample_id.region.txt | /usr/bin/time -v $parallel_dir/parallel -k -j $threads $freebayes_dir/freebayes -f ref.genome.fa  -p $ploidy $sample_id.filtered.bam --region {} | python2 $vcflib_dir/../scripts/vcffirstheader | $vcflib_dir/vcfstreamsort -w 1000 | $vcflib_dir/vcfuniq > $sample_id.$caller.raw.vcf");
-    } elsif ($caller eq "clairvoyante") {
-	system("/usr/bin/time -v python $clairvoyante_dir/clairvoyante.py callVarBamParallel --chkpnt_fn $clairvoyante_dir/../trainedModels/fullv3-illumina-novoalign-hg001+hg002-hg38/learningRate1e-3.epoch500 --ref_fn ref.genome.fa --includingAllContigs --bam_fn $sample_id.filtered.bam --sampleName $sample_id --output_prefix $sample_id.$caller.tmp --threshold 0.125 --minCoverage 4 --tensorflowThreads $threads > commands.sh");
+    } elsif ($caller eq "clair") {
+	my $trained_model = "$clair_dir/../trained_models/illumina/model";
+	system("/usr/bin/time -v python $clair_dir/clair.py callVarBamParallel --chkpnt_fn $trained_model --ref_fn ref.genome.fa --includingAllContigs --bam_fn $sample_id.filtered.bam --sampleName $sample_id --output_prefix $sample_id.$caller.tmp --threshold 0.2  --minCoverage 4 --tensorflowThreads $threads --workers $threads > commands.sh");
 	system("export CUDA_VISIBLE_DEVICES=\"\"; /usr/bin/time -v $parallel_dir/parallel -j $threads < commands.sh");
-	system("$vcflib_dir/vcfcat $sample_id.$caller.tmp.*.vcf | $vcflib_dir/vcfstreamsort > $sample_id.$caller.raw.vcf");
+	# find incomplete VCF files and rerun them
+	my $tmpcmd_fh = write_file("tmpcmd.sh");
+	print $tmpcmd_fh "for i in $sample_id.$caller.tmp.*.vcf; do if [ -z \"\$\(tail -n 1 \"\$i\")\" ]; then echo \"\$i\"; fi ; done"; 
+	system("/usr/bin/time -v bash tmpcmd.sh | grep -f - commands.sh | bash");
+	system("/usr/bin/time -v $vcflib_dir/vcfcat $sample_id.$caller.tmp.*.vcf | $vcflib_dir/vcfstreamsort | $vt_dir/vt sort - > $sample_id.$caller.raw.vcf");
 	system("rm $sample_id.$caller.tmp.*.vcf");
 	system("rm commands.sh");
+	system("rm tmpcmd.sh");
     } else {
-	die "Unknown caller: $caller! Please only use \"gatk4\" or \"freebayes\" or \"clairvoyante\" as your short-read-based SNP & INDEL caller!\n";
+	die "Unknown caller: $caller! Please only use \"gatk4\" or \"freebayes\" or \"clair\" as your short-read-based SNP & INDEL caller!\n";
     }
 
     $local_time = localtime();
@@ -129,7 +134,14 @@ foreach my $sample_id (@sample_table) {
     system("$vt_dir/vt annotate_variants $sample_id.$caller.normalized.vcf -r ref.genome.fa -o $sample_id.$caller.annotated.vcf");
     system("$vt_dir/vt view $sample_id.$caller.annotated.vcf -f \"VTYPE==SNP\" -o $sample_id.$caller.annotated.SNP.vcf");
     system("$vt_dir/vt view $sample_id.$caller.annotated.vcf -f \"VTYPE==INDEL\" -o $sample_id.$caller.annotated.INDEL.vcf");
-
+    if ($caller eq "clair") {
+	system("mv $sample_id.$caller.annotated.vcf $sample_id.$caller.annotated.raw_score.vcf");
+	system("mv $sample_id.$caller.annotated.SNP.vcf $sample_id.$caller.annotated.SNP.raw_score.vcf");
+	system("mv $sample_id.$caller.annotated.INDEL.vcf $sample_id.$caller.annotated.INDEL.raw_score.vcf");
+	system("perl $VARATHON_HOME/scripts/rescale_quality_score_for_clair_vcf.pl -i $sample_id.$caller.annotated.raw_score.vcf -o $sample_id.$caller.annotated.vcf");
+	system("perl $VARATHON_HOME/scripts/rescale_quality_score_for_clair_vcf.pl -i $sample_id.$caller.annotated.SNP.raw_score.vcf -o $sample_id.$caller.annotated.SNP.vcf");
+	system("perl $VARATHON_HOME/scripts/rescale_quality_score_for_clair_vcf.pl -i $sample_id.$caller.annotated.INDEL.raw_score.vcf -o $sample_id.$caller.annotated.INDEL.vcf");
+    }
     system("$vcflib_dir/vcffilter -f \"QUAL > $min_variant_calling_quality\" $sample_id.$caller.annotated.vcf > $sample_id.$caller.filtered.vcf");
     system("$vcflib_dir/vcffilter -f \"QUAL > $min_variant_calling_quality\" $sample_id.$caller.annotated.SNP.vcf > $sample_id.$caller.filtered.SNP.vcf");
     system("$vcflib_dir/vcffilter -f \"QUAL > $min_variant_calling_quality\" $sample_id.$caller.annotated.INDEL.vcf > $sample_id.$caller.filtered.INDEL.vcf");
@@ -205,32 +217,5 @@ sub parse_sample_table {
         $$sample_table_hashref{$sample_id}{'R2_read_file'} = $R2_read_file;
 	$$sample_table_hashref{$sample_id}{'note'} = $note;
     }
-}
-
-sub parse_sample_cnv_file {
-    my ($sample_cnv_fh, $sample, $refseq, $all_samples_cnv_fh) = @_;
-    while (<$sample_cnv_fh>) {
-	chomp;
-	/^#/ and next;
-	/^\s*$/ and next;
-	/chr\tstart/ and next;
-	my ($chr, $start, $end, $copy_number, $status, $MWU_test_p_value, $KS_test_p_value) = split /\t/, $_;
-	if ($start <= $end) {
-	    print $all_samples_cnv_fh "$sample\t$refseq\t$_\n";
-	}
-    }
-}
-
-sub get_read_length {
-    my $fh = shift @_;
-    my $read_length = 100;
-    while (<$fh>) {
-        chomp;
-        if ($. % 4 == 2) {
-            $read_length = length $_;
-            last;
-        }
-    }
-    return $read_length;
 }
 

@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Description
-Varathon is a scalable variant calling and benchmarking framework that supports both short and long reads. In addition to small variants such as SNPs and INDELs, Varathon can also identify large variants such as structural variants (SVs) (e.g. inversions, translocations, segmental deletions and duplications). Copy-number variants (CNVs), the results of segmental deletions and duplications, can also be nicely profiled. 
+Varathon is a scalable variant calling and benchmarking framework that supports both short and long reads. In addition to small variants such as SNPs and INDELs, Varathon can also identify large variants such as structural variants (SVs) (e.g. inversions, translocations, segmental deletions and duplications). Copy-number variants (CNVs), the results of segmental deletions and duplications, can also be nicely profiled using a traditional sliding-widnow-based method with short-reads. 
 
 Under the hood, a series of task-specific modules are provided to carry out the full workflow of read-mapping-based variant calling:
 
@@ -24,15 +24,15 @@ Under the hood, a series of task-specific modules are provided to carry out the 
 * **01.Short_Read_Mapping**
   * mapping short-read mapping to the reference genome (by bwa)
 * **02.Short_Read_SNP_INDEL_Calling**
-  * calling SNPs and INDELs based on the short-read mapping alignment (by GATK4 or freebayes)
+  * calling SNPs and INDELs based on the short-read mapping alignment (by GATK4, freebayes, or clair)
 * **03.Short_Read_SV_Calling**
   * calling SVs based on the short-read mapping alignment (by Manta or Delly)
 * **04.Short_Read_CNV_Calling**
-  * calling CNVs based on the short-read mapping alignment (by Freec+DNAcopy)
+  * calling CNVs based on the short-read mapping alignment (by FREEC+DNAcopy)
 * **11.Long_Read_Mapping**
   * mapping long reads to the reference genome (by minimap2, pbmm2, ngmlr, or last)
 * **12.Long_Read_SNP_INDEL_Calling**
-  * calling SNPs and INDELs based on the long-read mapping alignment (by longshot)
+  * calling SNPs and INDELs based on the long-read mapping alignment (by longshot or clair)
 * **13.Long_Read_SV_Calling**
   * calling SVs based on the long-read mapping alignment (by Sniffles, svim, Picky, nanosv, or pbsv)
 * **20.Variant_Calling_Benchmarking**

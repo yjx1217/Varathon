@@ -7,7 +7,7 @@ source ./../../env.sh
 
 #######################################
 # set project-specific variables
-sra_run_list="./../../data/yeast.short_reads.sra_run_list.txt" # A simple tab separated file with two columns, in which the first column (compulsory) contains the SRA run id and the sencond column (optional) contains the corresponding sample name. Lines started with "#" will be ignored.
+sra_run_list="./../../data/yeast.short_reads.sra_run_list.txt" # A simple tab separated file with two compulsory columns, in which the first column contains the SRA run id and the sencond column contains the corresponding sample name. Lines started with "#" will be ignored.
 #######################################
 # process the pipeline
 
@@ -39,8 +39,8 @@ do
     # $sra_dir/fasterq-dump --threads $threads --temp ./tmp $srr_id 
     $sra_dir/fastq-dump --defline-seq '@$sn[_$rn]/$ri' --defline-qual '+$sn[_$rn]/$ri' \
      	--gzip --split-files -skip-technical --dumpbase --read-filter pass --clip $srr_id
-    # ln -s ${srr_id}_pass_1.fastq.gz $sample_name.R1.fastq.gz
-    # ln -s ${srr_id}_pass_2.fastq.gz $sample_name.R2.fastq.gz
+    ln -s ${srr_id}_pass_1.fastq.gz $sample_name.R1.fastq.gz
+    ln -s ${srr_id}_pass_2.fastq.gz $sample_name.R2.fastq.gz
 done < $sra_run_list
 # rm -r tmp
 

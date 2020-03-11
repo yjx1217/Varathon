@@ -5,7 +5,7 @@ set -e -o pipefail
 # load environment variables for Varathon
 source ./../../env.sh
 PATH="$samtools_dir:$PATH"
-source $miniconda2_dir/activate $build_dir/conda_clairvoyante_env
+source $miniconda2_dir/activate $build_dir/conda_clair_env
 
 ###########################################
 # set project-specific variables
@@ -16,7 +16,7 @@ excluded_chr_list="./../../data/yeast.excluded_chr_list.txt" # The list for spec
 min_mapping_quality=30 # The minimal mapping quality to use for filtering short-read mapping alignment. Default = 30.
 min_variant_calling_quality=30 # The minimal variant calling quality to use for filtering short-read mapping alignment. Default = 30.
 ploidy=2; # The ploidy status of samples in the processing batch. Default = 2.
-snp_indel_caller="gatk4" # The specific caller used for SNP & INDEL calling: "gatk4" or "freebayes" or "clairvoyante". Default = "gatk4".
+snp_indel_caller="gatk4" # The specific caller used for SNP & INDEL calling: "gatk4", "freebayes", or "clair". Default = "gatk4".
 threads=4 # The number of threads to use. Defualt = 4.
 debug="no" # Whether to keep intermediate files for debuging. Use "yes" if prefer to keep intermediate files, otherwise use "no". Default = "no".
 ###########################################

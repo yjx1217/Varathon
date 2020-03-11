@@ -8,12 +8,13 @@ use Cwd;
 ##############################################################
 #  script: batch_long_read_SV_calling.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2019.12.28
+#  last edited: 2020.04.27
 #  description: run long-read-based SV calling for a batch of samples
 #  example: perl batch_long_read_SV_calling.pl -i Master_Sample_Table.txt -threads 4 -b $batch_id -ref_genome ref_genome.fa  -long_read_mapping_dir ./../01.Long_Read_Mapping -min_mapping_quality 30 -caller sniffles -excluded_chr_list yeast.excluded_chr_list.txt -long_read_technology pacbio
 ##############################################################
 
 my $VARATHON_HOME = $ENV{VARATHON_HOME};
+my $java_dir = $ENV{java_dir};
 my $samtools_dir = $ENV{samtools_dir};
 my $picard_dir = $ENV{picard_dir};
 my $windowmasker_dir = $ENV{windowmasker_dir};
@@ -98,7 +99,7 @@ foreach my $sample_id (@sample_table) {
     }
     ## index reference sequence
     system("$samtools_dir/samtools faidx ref.genome.fa");
-    system("java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
     if ($caller =~ /(sniffles|svim|pbsv|nanosv)/) {
 	## filter bam file by mapping quality
 	if ($caller =~ /pbsv/) {
@@ -107,7 +108,7 @@ foreach my $sample_id (@sample_table) {
 	    system("$samtools_dir/samtools view -h -b -q $min_mapping_quality $base_dir/$long_read_mapping_dir/$batch_id/$sample_id/$sample_id.dedup.bam  >$sample_id.filtered.bam");
 	}
 	## add read group
-	system("java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar AddOrReplaceReadGroups -I $sample_id.filtered.bam -O $sample_id.rdgrp.bam -SORT_ORDER coordinate -RGID $sample_id -RGLB $sample_id -RGPL $long_read_technology -RGPU $sample_id -RGSM $sample_id -RGCN 'RGCN'");
+	system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar AddOrReplaceReadGroups -I $sample_id.filtered.bam -O $sample_id.rdgrp.bam -SORT_ORDER coordinate -RGID $sample_id -RGLB $sample_id -RGPL $long_read_technology -RGPU $sample_id -RGSM $sample_id -RGCN 'RGCN'");
 	## calculate MD tag
 	system("$samtools_dir/samtools calmd -b --threads $threads $sample_id.rdgrp.bam ref.genome.fa > $sample_id.calmd.bam");
 	# index the input bam file
