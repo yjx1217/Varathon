@@ -1,5 +1,5 @@
 #!/bin/bash
-# last update: 2020.04.27
+# last update: 2020.05.21
 set -e -o pipefail
 
 VARATHON_HOME=$(pwd)
@@ -102,7 +102,7 @@ NANOSV_DOWNLOAD_URL="https://github.com/mroosmalen/nanosv.git"
 
 # variant processing
 VT_VERSION="" # we use the github commit version below
-VT_GITHUB_COMMIT_VERSION="f6d2b5d" # committed on 2018.05.09
+VT_GITHUB_COMMIT_VERSION="6686b5c" # committed on 2017.05.09
 VT_DOWNLOAD_URL="https://github.com/atks/vt.git"
 
 HTSLIB_VERSION="1.9" # released on 2018.07.18
