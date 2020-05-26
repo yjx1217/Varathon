@@ -68,7 +68,6 @@ Varathon is designed for a desktop or computing server running an x86-64-bit Lin
 * python v3.4 or newer (https://www.python.org/)
 * tar (https://www.gnu.org/software/tar/)
 * unzip (http://infozip.sourceforge.net/UnZip.html)
-* virtualenv v15.1.0 or newer (https://virtualenv.pypa.io)
 * wget (https://www.gnu.org/software/wget/)
 * zlib and zlib-devel (https://zlib.net/)
 * xz and xz-devel (https://tukaani.org/xz/)
