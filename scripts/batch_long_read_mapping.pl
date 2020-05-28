@@ -8,7 +8,7 @@ use Cwd;
 ##############################################################
 #  script: batch_long_read_mapping.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2020.04.27
+#  last edited: 2020.05.28
 #  description: run long-read mapping for a batch of samples
 #  example: perl batch_long_read_mapping.pl -i Master_Sample_Table.txt -b $batch_id -threads 4  -ref_genome ref_genome.fa -long_read_dir ./../00.Long_Reads -long_read_technology pacbio -long_read_mapper minimap2 -min_mapping_quality 30 -excluded_chr_list yeast.excluded_chr_list.txt
 ##############################################################
@@ -20,6 +20,7 @@ my $ngmlr_dir = $ENV{ngmlr_dir};
 my $last_dir = $ENV{last_dir};
 my $picky_dir = $ENV{picky_dir};
 my $pbmm2_dir = $ENV{pbmm2_dir};
+my $graphmap2_dir = $ENV{graphmap2_dir};
 my $samtools_dir = $ENV{samtools_dir};
 my $picard_dir = $ENV{picard_dir};
 my $sample_table = "Master_Sample_Table.txt";
@@ -138,12 +139,20 @@ foreach my $sample_id (@sample_table) {
 	if ($debug eq "no") {
 	    system("rm $sample_id.raw.fastq");
         }
+    } elsif ($long_read_mapper eq "graphmap2") {
+	system("gzip -c -d $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} > $sample_id.raw.fastq");
+	system("/usr/bin/time -v $graphmap2_dir/graphmap-linux align -t $threads -r ref.genome.fa -d $sample_id.raw.fastq -o $sample_id.sam");
+        if ($debug eq "no") {
+            system("rm $sample_id.raw.fastq");
+        }
+    } else {
+	die "Error! Unrecognized long_read_mapper: $long_read_mapper! Exit! \n";
     }
-    if ($long_read_mapper =~ /(minimap2|ngmlr|pbmm2|last)/) {
+    if ($long_read_mapper =~ /(minimap2|ngmlr|pbmm2|last|graphmap2)/) {
 	## index reference sequence
 	system("$samtools_dir/samtools faidx ref.genome.fa");
 	system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
-	if ($long_read_mapper =~ /(minimap2|ngmlr|last)/) {
+	if ($long_read_mapper =~ /(minimap2|ngmlr|last|graphmap2)/) {
 	    ## filter bam file by mapping quality
 	    system("$samtools_dir/samtools view -bS -q $min_mapping_quality $sample_id.sam >$sample_id.bam");
 	    if ($debug eq "no") {

@@ -30,11 +30,11 @@ Under the hood, a series of task-specific modules are provided to carry out the 
 * **04.Short_Read_CNV_Calling**
   * calling CNVs based on the short-read mapping alignment (by FREEC+DNAcopy)
 * **11.Long_Read_Mapping**
-  * mapping long reads to the reference genome (by minimap2, pbmm2, ngmlr, or last)
+  * mapping long reads to the reference genome (by minimap2, ngmlr, last, or pbmm2)
 * **12.Long_Read_SNP_INDEL_Calling**
   * calling SNPs and INDELs based on the long-read mapping alignment (by longshot or clair)
 * **13.Long_Read_SV_Calling**
-  * calling SVs based on the long-read mapping alignment (by Sniffles, svim, Picky, nanosv, or pbsv)
+  * calling SVs based on the long-read mapping alignment (by Sniffles, svim, Picky, NanoSV, or pbsv)
 * **20.Variant_Calling_Benchmarking**
   * comparing different variant calling VCF files to calculate benchmarking statistics such as precision, recall, and F1 score.
 
