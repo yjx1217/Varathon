@@ -50,6 +50,10 @@ MINIMAP2_DOWNLOAD_URL="https://github.com/lh3/minimap2/releases/download/v${MINI
 PBMM2_VERSION="1.0.0" # released on 2019.03.11
 # distributed via conda
 
+GRAPHMAP_VERSION="0.5.2"
+GRAPHMAP_GITHUB_COMMIT_VERSION="eb8c75d"
+GRAPHMAP_DOWNLOAD_URL="https://github.com/isovic/graphmap.git"
+
 GRAPHMAP2_VERSION="0.6.4"
 GRAPHMAP2_DOWNLOAD_URL="https://github.com/lbcb-sci/graphmap2/releases/download/v0.6.4/prebuild.zip"
 
@@ -381,14 +385,27 @@ $miniconda2_dir/conda install -y -c bioconda/label/cf201901 pbmm2
 source $miniconda2_dir/deactivate
 pbmm2_dir="$build_dir/conda_pbmm2_env/bin"
 
-# --------------- GraphMap2 ------------------
+# --------------- GraphMap ------------------
 cd $build_dir
-echo "Download graphmap2-v${GRAPHMAP2_VERSION}"
-download $GRAPHMAP2_DOWNLOAD_URL "graphmap2-${GRAPHMAP2_VERSION}.zip"
-unzip graphmap2-${GRAPHMAP2_VERSION}.zip
-mv prebuild graphmap2-${GRAPHMAP2_VERSION}
-graphmap2_dir="$build_dir/graphmap2-${GRAPHMAP2_VERSION}"
-rm graphmap2-${GRAPHMAP2_VERSION}.zip
+echo "Download graphmap-v${GRAPHMAP_VERSION}"
+git clone $GRAPHMAP_DOWNLOAD_URL
+cd graphmap
+git checkout -f -q $GRAPHMAP_GITHUB_COMMIT_VERSION
+make modules  
+make
+graphmap_dir="$build_dir/graphmap/bin/Linux-x64"
+
+
+# # --------------- GraphMap2 ------------------
+# cd $build_dir
+# echo "Download graphmap2-v${GRAPHMAP2_VERSION}"
+# download $GRAPHMAP2_DOWNLOAD_URL "graphmap2-${GRAPHMAP2_VERSION}.zip"
+# unzip graphmap2-${GRAPHMAP2_VERSION}.zip
+# mv prebuild graphmap2-${GRAPHMAP2_VERSION}
+# cd graphmap2-${GRAPHMAP2_VERSION}
+# ln -s graphmap-linux graphmap 
+# graphmap2_dir="$build_dir/graphmap2-${GRAPHMAP2_VERSION}"
+# rm graphmap2-${GRAPHMAP2_VERSION}.zip
 
 # --------------- samtools -----------------
 cd $build_dir
@@ -738,6 +755,7 @@ echo "export last_dir=${last_dir}" >> env.sh
 echo "export ngmlr_dir=${ngmlr_dir}" >> env.sh
 echo "export minimap2_dir=${minimap2_dir}" >> env.sh
 echo "export pbmm2_dir=${pbmm2_dir}" >> env.sh
+echo "export graphmap_dir=${graphmap_dir}" >> env.sh
 echo "export graphmap2_dir=${graphmap2_dir}" >> env.sh
 echo "export samtools_dir=${samtools_dir}" >> env.sh
 echo "export htslib_dir=${htslib_dir}" >> env.sh
