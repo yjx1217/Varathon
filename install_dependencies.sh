@@ -1,5 +1,5 @@
 #!/bin/bash
-# last update: 2020.05.28
+# last update: 2020.06.22
 set -e -o pipefail
 
 VARATHON_HOME=$(pwd)
@@ -7,7 +7,7 @@ BUILD="build"
 
 # genome simulation
 SIMUG_VERSION="1.0.0" # 
-SIMUG_GITHUB_COMMIT_VERSION="472f20c" # commited on 2019.07.12
+SIMUG_GITHUB_COMMIT_VERSION="940b961" # commited on 2020.06.22
 SIMUG_DOWNLOAD_URL="https://github.com/yjx1217/simuG.git"
 
 # reads retrieving/simulation/processing

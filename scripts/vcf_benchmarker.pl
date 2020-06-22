@@ -9,7 +9,7 @@ use List::Util qw(sum min max);
 ##############################################################
 #  script: vcf_benchmarker.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2019.08.27
+#  last edited: 2020.06.21
 #  description: compare the reference and query vcf files to determine the precision, recall, and F1 score of the query variant calling result by assuming the reference vcf file as the ground truth.
 ##############################################################
 
@@ -550,29 +550,31 @@ sub parse_simple_vcf_file {
     /^#/ and next;
     /^\s*$/ and next;
     my ($ref_chr, $ref_start, $variant_id, $ref_allele, $alt_allele, $variant_qual, $variant_filter, $variant_info) = split /\t/, $_;
-    if (($variant_qual eq ".") or ($variant_qual >= $qual_cutoff)) {
-      my $variant_type;
-      my $ref_allele_length = length $ref_allele;
-      my $alt_allele_length = length $alt_allele;
-      my $ref_end = $ref_start + $ref_allele_length - 1;
-      if (($alt_allele !~ /,/) and ($ref_allele_length ne $alt_allele_length)) {
-          $variant_type = "INDEL";
-      } else {
-          $variant_type = "SNP";
-      }
-      if ((defined $query_type) and ($query_type ne $variant_type)) {
-          next;
-      } else {
-	  $vcf{$ref_chr}{$ref_start}{'ref_chr'} = $ref_chr;
-	  $vcf{$ref_chr}{$ref_start}{'ref_start'} = $ref_start;
-	  $vcf{$ref_chr}{$ref_start}{'ref_end'} = $ref_end;
-	  $vcf{$ref_chr}{$ref_start}{'ref_allele'} = $ref_allele;
-	  $vcf{$ref_chr}{$ref_start}{'alt_allele'} = $alt_allele;
-	  $vcf{$ref_chr}{$ref_start}{'variant_type'} = $variant_type;
-	  $vcf{$ref_chr}{$ref_start}{'variant_id'} = $variant_id;
-	  $vcf{$ref_chr}{$ref_start}{'variant_qual'} = $variant_qual;
-	  $vcf{$ref_chr}{$ref_start}{'variant_info'} = $variant_info;
-      }
+    if (($variant_filter eq ".") or ($variant_filter eq "PASS")) {
+	if (($variant_qual eq ".") or ($variant_qual >= $qual_cutoff)) {
+	    my $variant_type;
+	    my $ref_allele_length = length $ref_allele;
+	    my $alt_allele_length = length $alt_allele;
+	    my $ref_end = $ref_start + $ref_allele_length - 1;
+	    if (($alt_allele !~ /,/) and ($ref_allele_length ne $alt_allele_length)) {
+		$variant_type = "INDEL";
+	    } else {
+		$variant_type = "SNP";
+	    }
+	    if ((defined $query_type) and ($query_type ne $variant_type)) {
+		next;
+	    } else {
+		$vcf{$ref_chr}{$ref_start}{'ref_chr'} = $ref_chr;
+		$vcf{$ref_chr}{$ref_start}{'ref_start'} = $ref_start;
+		$vcf{$ref_chr}{$ref_start}{'ref_end'} = $ref_end;
+		$vcf{$ref_chr}{$ref_start}{'ref_allele'} = $ref_allele;
+		$vcf{$ref_chr}{$ref_start}{'alt_allele'} = $alt_allele;
+		$vcf{$ref_chr}{$ref_start}{'variant_type'} = $variant_type;
+		$vcf{$ref_chr}{$ref_start}{'variant_id'} = $variant_id;
+		$vcf{$ref_chr}{$ref_start}{'variant_qual'} = $variant_qual;
+		$vcf{$ref_chr}{$ref_start}{'variant_info'} = $variant_info;
+	    }
+	}
     }
   }
   return %vcf;
@@ -713,11 +715,16 @@ sub parse_SV_vcf_file {
         /^\s*$/ and next;
         /^#/ and next;
         my ($ref_chr, $ref_start, $id, $ref_allele, $alt_allele, $variant_qual, $variant_filter, $variant_info) = split /\t/, $_;
-        if ($variant_filter =~ /($sv_qual_filter_regexp)/i) {
+	if ($variant_filter =~ /($sv_qual_filter_regexp)/i) {
             print "Warning! Ignore low quality SV record: $_\n";
             next;
-        } else {
-            $record_index++;
+	# } elsif (($variant_filter eq "MapQual") or ($variant_filter eq "")) {
+	#    $variant_filter = "PASS";
+        } elsif (($variant_filter ne ".") and ($variant_filter ne "PASS")) { 
+            print "Warning! Ignore filter failed SV record: $_\n";
+	    next;
+	} else {
+	    $record_index++;
         }
         my $sv_event_type = "NA";
 	my $sv_event_name = "NA";

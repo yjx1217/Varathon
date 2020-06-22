@@ -8,7 +8,7 @@ use Cwd;
 ##############################################################
 #  script: batch_long_read_SV_calling.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2020.04.27
+#  last edited: 2020.06.22
 #  description: run long-read-based SV calling for a batch of samples
 #  example: perl batch_long_read_SV_calling.pl -i Master_Sample_Table.txt -threads 4 -b $batch_id -ref_genome ref_genome.fa  -long_read_mapping_dir ./../01.Long_Read_Mapping -min_mapping_quality 30 -caller sniffles -excluded_chr_list yeast.excluded_chr_list.txt -long_read_technology pacbio
 ##############################################################
@@ -168,14 +168,14 @@ foreach my $sample_id (@sample_table) {
 	system("$bedtools_dir/bedtools random -l 1 -seed 20190518 -n 1000000 -g ref.genome.fa.fai > ref.genome.random_sample.raw.bed");
 	# Shuffle positions while excluding gaps/simple repeats
 	system("$bedtools_dir/bedtools shuffle -excl ref.genome.hardmask.masking_details.bed -noOverlapping -i ref.genome.random_sample.raw.bed -g ref.genome.fa.fai > ref.genome.random_sample.shuffled.bed");
-	system("/usr/bin/time -v $nanosv_dir/NanoSV -t $threads -b ref.genome.random_sample.shuffled.bed -s $samtools_dir/samtools -o $sample_id.$caller.SV.vcf $sample_id.calmd.bam");
+	system("/usr/bin/time -v $nanosv_dir/NanoSV -t $threads -c $VARATHON_HOME/data/nanosv.config.ini -b ref.genome.random_sample.shuffled.bed -s $samtools_dir/samtools -o $sample_id.$caller.SV.vcf $sample_id.calmd.bam");
     } else {
 	print "Error!!! Unknown caller: $caller! Please use one of the following as your long-read-based SV caller!\n";
 	print "\"sniffles\" (for both PacBio and Nanopore)\n";
 	print "\"svim\" (for both PacBio and Nanopore)\n";
 	print "\"picky\" (for both PacBio and Nanopore)\n";
-	print "\"pbsv\" (for PacBio only)\n";
-	print "\"nanosv\" (for Nanopore only)\n";
+	print "\"pbsv\" (for PacBio and Nanopore)\n";
+	print "\"nanosv\" (for Nanopore and Nanopore)\n";
 	print "Exit!\n";
 	die;
     }
