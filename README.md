@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Description
-Varathon is a scalable variant calling and benchmarking framework that supports both short and long reads. In addition to small variants such as SNPs and INDELs, Varathon can also identify large variants such as structural variants (SVs) (e.g. inversions, translocations, segmental deletions and duplications). Copy-number variants (CNVs), the results of segmental deletions and duplications, can also be nicely profiled using a traditional sliding-widnow-based method with short-reads. 
+Varathon is a scalable variant calling and benchmarking framework that supports both short and long reads. In addition to small variants such as SNPs and INDELs, Varathon can also identify large variants such as structural variants (SVs) (e.g. inversions, translocations, segmental deletions and duplications). Copy-number variants (CNVs), the results of segmental deletions and duplications, can also be nicely profiled using a traditional sliding-window-based method with short-reads. 
 
 Under the hood, a series of task-specific modules are provided to carry out the full workflow of read-mapping-based variant calling:
 
