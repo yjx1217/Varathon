@@ -1,9 +1,28 @@
 #!/bin/bash
-# last update: 2020.06.22
+# last update: 2020.08.27
 set -e -o pipefail
 
+#########################
 VARATHON_HOME=$(pwd)
 BUILD="build"
+mainland_china_installation="no";
+#########################
+
+while getopts ":hc" opt
+do
+    case "${opt}" in
+        h)
+	    echo "Usage:"
+	    echo "bash install_dependencies.sh"
+            echo "When installing within mainland China, please run this script with the '-c' option >"
+	    echo "bash install_dependencies.sh -c";;
+        c)
+	    echo "Detected the '-c' option >"
+	    echo "Set installation location as 'mainland_china'" 
+            mainland_china_installation="yes";;
+    esac
+done
+echo "";
 
 # genome simulation
 SIMUG_VERSION="1.0.0" # 
@@ -120,7 +139,12 @@ BCFTOOLS_DOWNLOAD_URL="https://github.com/samtools/bcftools/releases/download/${
 
 # others
 MINICONDA2_VERSION="4.5.11" # released on 2018.09.04
-MINICONDA2_DOWNLOAD_URL="https://repo.continuum.io/miniconda/Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh"
+if [[ "$mainland_china_installation" == "no" ]]
+then
+    MINICONDA2_DOWNLOAD_URL="https://repo.continuum.io/miniconda/Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh"
+else
+    MINICONDA2_DOWNLOAD_URL="https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh"
+fi
 
 BEDTOOLS_VERSION="2.27.1" # released on 2017.12.15
 BEDTOOLS_DOWNLOAD_URL="https://github.com/arq5x/bedtools2/releases/download/v${BEDTOOLS_VERSION}/bedtools-${BEDTOOLS_VERSION}.tar.gz"
@@ -220,9 +244,20 @@ cd $build_dir
 download $MINICONDA2_DOWNLOAD_URL "Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh"
 bash Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh -b -p $build_dir/miniconda2
 miniconda2_dir="$build_dir/miniconda2/bin"
-$miniconda2_dir/conda config --add channels defaults
-$miniconda2_dir/conda config --add channels bioconda
-$miniconda2_dir/conda config --add channels conda-forge
+if [[ "$mainland_china_installation" == "yes" ]]
+then
+    $miniconda2_dir/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+    $miniconda2_dir/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+    $miniconda2_dir/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
+    $miniconda2_dir/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
+    $miniconda2_dir/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+else 
+    $miniconda2_dir/conda config --add channels defaults
+    $miniconda2_dir/conda config --add channels bioconda
+    $miniconda2_dir/conda config --add channels conda-forge
+fi
+$miniconda2_dir/conda config --set show_channel_urls yes
+
 $miniconda2_dir/pip install cython==0.29.14 numpy==1.13.1
 rm Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh 
 
@@ -271,7 +306,12 @@ $miniconda2_dir/conda create --name tensorflow_cdpm python=2.7 -y
 source $miniconda2_dir/activate tensorflow_cdpm
 $miniconda2_dir/conda install -y -c anaconda scikit-learn=0.20.3
 pip install numpy==1.13.1
-pip install tensorflow==1.2.1
+if [[ "$mainland_china_installation" == "yes" ]]
+then
+    pip install tensorflow==1.2.1 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+else
+    pip install tensorflow==1.2.1
+fi
 pip install tflearn==0.3.2
 pip install tqdm==4.19.4
 pip install scipy==0.18.1

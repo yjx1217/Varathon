@@ -9,7 +9,7 @@ use Cwd;
 ##############################################################
 #  script: batch_short_read_CNV_calling.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2020.04.26
+#  last edited: 2020.11.25
 #  description: run short-read-based CNV calling for a batch of samples
 #  example: perl batch_short_read_CNV_calling.pl -i Master_Sample_Table.txt -threads 4 -b $batch_id -ref_genome ref_genome.fa  -short_read_mapping_dir ./../01.Short_Read_Mapping -min_mapping_quality 30 -window_size 250  -ploidy 1 -excluded_chr_list yeast.excluded_chr_list.txt
 ##############################################################
@@ -134,8 +134,8 @@ foreach my $sample_id (@sample_table) {
     my $GC_fh = read_file($GC);
     my %GC = parse_GC_file($GC_fh, $window_size);
 
-    my $min_expected_gc = 0;
-    my $max_expected_gc = 1;
+    my $min_expected_gc = 0.4;
+    my $max_expected_gc = 0.6;
 
     foreach my $chr (@FREEC_chr) {
 	my @GC_chr = ();
@@ -144,24 +144,30 @@ foreach my $sample_id (@sample_table) {
 		push @GC_chr, $GC{$chr}{$i}{'GC'};
 	    }
 	}
-	my $gc_stat_chr = Statistics::Descriptive::Full->new();
-	$gc_stat_chr->add_data(@GC_chr);
-	$gc_stat_chr->sort_data();
-        $gc_stat_chr->presorted(1);
-	# my $gc_mean_chr = sprintf("%.3f", $gc_stat_chr->mean());
-	# my $gc_median_chr = sprintf("%.3f", $gc_stat_chr->median());
-	my $gc_min_chr = sprintf("%.3f", $gc_stat_chr->min());
-	my $gc_max_chr = sprintf("%.3f", $gc_stat_chr->max());
-	# my $gc_stdev_chr = sprintf("%.3f", $gc_stat_chr->standard_deviation());
-	my $gc_quantile_lower_chr = $gc_stat_chr->percentile($lower_quantile);
-	$gc_quantile_lower_chr = sprintf("%.3f", $gc_quantile_lower_chr);
-	my $gc_quantile_upper_chr = $gc_stat_chr->percentile($upper_quantile);
-	$gc_quantile_upper_chr = sprintf("%.3f", $gc_quantile_upper_chr);
-	if ($gc_quantile_lower_chr > $min_expected_gc) {
-	    $min_expected_gc = $gc_quantile_lower_chr;
-	}
-	if ($gc_quantile_upper_chr < $max_expected_gc) {
-	    $max_expected_gc = $gc_quantile_upper_chr;
+	if ((scalar @GC_chr) >= 10) {
+	    my $gc_stat_chr = Statistics::Descriptive::Full->new();
+	    $gc_stat_chr->add_data(@GC_chr);
+	    $gc_stat_chr->sort_data();
+	    $gc_stat_chr->presorted(1);
+	    # my $gc_mean_chr = sprintf("%.3f", $gc_stat_chr->mean());
+	    # my $gc_median_chr = sprintf("%.3f", $gc_stat_chr->median());
+	    my $gc_min_chr = sprintf("%.3f", $gc_stat_chr->min());
+	    my $gc_max_chr = sprintf("%.3f", $gc_stat_chr->max());
+	    # my $gc_stdev_chr = sprintf("%.3f", $gc_stat_chr->standard_deviation());
+	    my $gc_quantile_lower_chr = $gc_stat_chr->percentile($lower_quantile);
+	    $gc_quantile_lower_chr = sprintf("%.3f", $gc_quantile_lower_chr);
+	    my $gc_quantile_upper_chr = $gc_stat_chr->percentile($upper_quantile);
+	    $gc_quantile_upper_chr = sprintf("%.3f", $gc_quantile_upper_chr);
+	    if ($gc_quantile_lower_chr < $min_expected_gc) {
+		$min_expected_gc = $gc_quantile_lower_chr;
+	    }
+	    if ($gc_quantile_upper_chr > $max_expected_gc) {
+		$max_expected_gc = $gc_quantile_upper_chr;
+	    }
+	    print "chr=$chr\n";
+	    print "gc_quantile_upper_chr=$gc_quantile_upper_chr, gc_quantile_lower_chr=$gc_quantile_lower_chr\n";
+	    print "max_expected_gc=$max_expected_gc, min_expected_gc=$min_expected_gc\n";
+	    print "\n";
 	}
     }
 	
@@ -194,7 +200,7 @@ foreach my $sample_id (@sample_table) {
     	$local_time = localtime();
     	print "[$local_time] processing sample $sample_id with CNV calls plotting\n";
 
-    	system("Rscript --vanilla --slave $VARATHON_HOME/scripts/plot_CNV_for_FREEC.R --ploidy $ploidy --genome_fai ./../ref_genome_prepreprocessing/ref.genome.fa.fai --input $sample_id.FREEC.bam_ratio.sorted.adjusted.txt --output $sample_id.CNV_plot.pdf");
+    	# system("Rscript --vanilla --slave $VARATHON_HOME/scripts/plot_CNV_for_FREEC.R --ploidy $ploidy --genome_fai ./../ref_genome_prepreprocessing/ref.genome.fa.fai --input $sample_id.FREEC.bam_ratio.sorted.adjusted.txt --output $sample_id.CNV_plot.pdf");
     	system("rm Rplots.pdf");
     	if (-s "$sample_id.FREEC.bam_ratio.sorted.resegmented.CNVs.txt") {
     	    system("Rscript --vanilla --slave $VARATHON_HOME/scripts/assess_CNV_significance_for_FREEC.R --cnv $sample_id.FREEC.bam_ratio.sorted.resegmented.CNVs.txt --ratio $sample_id.FREEC.bam_ratio.sorted.adjusted.txt --genome_fai ./../ref_genome_prepreprocessing/ref.genome.fa.fai --output $sample_id.CNV_significance_test.txt");

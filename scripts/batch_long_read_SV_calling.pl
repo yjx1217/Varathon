@@ -108,7 +108,7 @@ foreach my $sample_id (@sample_table) {
 	    system("$samtools_dir/samtools view -h -b -q $min_mapping_quality $base_dir/$long_read_mapping_dir/$batch_id/$sample_id/$sample_id.dedup.bam  >$sample_id.filtered.bam");
 	}
 	## add read group
-	system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar AddOrReplaceReadGroups -I $sample_id.filtered.bam -O $sample_id.rdgrp.bam -SORT_ORDER coordinate -RGID $sample_id -RGLB $sample_id -RGPL $long_read_technology -RGPU $sample_id -RGSM $sample_id -RGCN 'RGCN'");
+	system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar AddOrReplaceReadGroups -I $sample_id.filtered.bam -O $sample_id.rdgrp.bam -SORT_ORDER coordinate -VALIDATION_STRINGENCY LENIENT -RGID $sample_id -RGLB $sample_id -RGPL $long_read_technology -RGPU $sample_id -RGSM $sample_id -RGCN 'RGCN'");
 	## calculate MD tag
 	system("$samtools_dir/samtools calmd -b --threads $threads $sample_id.rdgrp.bam ref.genome.fa > $sample_id.calmd.bam");
 	# index the input bam file

@@ -170,13 +170,13 @@ foreach my $sample_id (@sample_table) {
     	system("rm $sample_id.realn.intervals");
     }
     # generate samtools mpileup 
-   system("$samtools_dir/samtools mpileup -Q 0 -C 50 -q $min_mapping_quality -f ref.genome.fa  $sample_id.realn.bam |gzip -c >${sample_id}.mpileup.gz");	
+    # system("$samtools_dir/samtools mpileup -Q 0 -C 50 -q $min_mapping_quality -f ref.genome.fa  $sample_id.realn.bam |gzip -c >${sample_id}.mpileup.gz");	
     # compute basic alignment statistics by samtools
     system("$samtools_dir/samtools flagstat $sample_id.realn.bam >$sample_id.samstat");
     # calculate per-base depth
     system("$samtools_dir/samtools depth -aa $sample_id.realn.bam |gzip -c >$sample_id.depth.txt.gz");
     # compute insert size statistics
-    # system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CollectInsertSizeMetrics -INPUT $sample_id.realn.bam -OUTPUT $sample_id.insert_size_metrics.txt -H $sample_id.insert_size_histogram.pdf -M 0.5");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CollectInsertSizeMetrics -INPUT $sample_id.realn.bam -OUTPUT $sample_id.insert_size_metrics.txt -H $sample_id.insert_size_histogram.pdf -M 0.5");
     # calculate read mapping coverage statistics
     system("perl $VARATHON_HOME/scripts/summarize_mapping_coverage.pl -r ref.genome.fa -s $sample_id.samstat -d $sample_id.depth.txt.gz -c 5 -t $sample_id -o $sample_id.coverage_summary.txt");
     if ($mapping_count == 1) {
