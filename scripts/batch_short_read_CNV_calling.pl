@@ -9,7 +9,7 @@ use Cwd;
 ##############################################################
 #  script: batch_short_read_CNV_calling.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2020.11.25
+#  last edited: 2020.11.26
 #  description: run short-read-based CNV calling for a batch of samples
 #  example: perl batch_short_read_CNV_calling.pl -i Master_Sample_Table.txt -threads 4 -b $batch_id -ref_genome ref_genome.fa  -short_read_mapping_dir ./../01.Short_Read_Mapping -min_mapping_quality 30 -window_size 250  -ploidy 1 -excluded_chr_list yeast.excluded_chr_list.txt
 ##############################################################
@@ -85,97 +85,100 @@ foreach my $sample_id (@sample_table) {
     }
 
     # setup reference genome
-    system("mkdir -p $base_dir/$output_dir/ref_genome_prepreprocessing");
-    chdir("$base_dir/$output_dir/ref_genome_prepreprocessing");
-    if (defined $excluded_chr_list) {
-	if (-e "$base_dir/$excluded_chr_list") {
-	    system("$VARATHON_HOME/scripts/select_fasta_by_list.pl -i $base_dir/$ref_genome -l $base_dir/$excluded_chr_list -m reverse -o ref.genome.fa");
-	} else {
-	    die "cannot find $excluded_chr_list at $base_dir/$excluded_chr_list\n";
-	}
-    } else {
-        system("cp $base_dir/$ref_genome ref.genome.fa");
-    }
-    ## index reference sequence
-    system("$samtools_dir/samtools faidx ref.genome.fa");
-    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
-    my $for_FREEC_refseq = "ref.genome.fa";
-    my $for_FREEC_refseq_fh = read_file($for_FREEC_refseq);
-    my %for_FREEC_refseq = ();
-    my @for_FREEC_refseq = ();
-    parse_fasta_file($for_FREEC_refseq_fh, \%for_FREEC_refseq, \@for_FREEC_refseq);
-
-    my $FREEC_refseq = "FREEC.refseq.fa";
-    my $FREEC_refseq_fh = write_file($FREEC_refseq);
-    my %FREEC_refseq_chr_dict = ();
-    my @FREEC_chr = ();
-    # setup chr, chrLength   
-    system("mkdir FREEC_refseq_chr");
-    my $chr_index = 0;
-    foreach my $chr (@for_FREEC_refseq) {
-	$chr_index++;
-	my $FREEC_chr = "chr". $chr_index;
-	$FREEC_refseq_chr_dict{'FREEC_to_original'}{$chr_index} = $chr;
-	$FREEC_refseq_chr_dict{'original_to_FREEC'}{$chr} = $FREEC_chr;
-	push @FREEC_chr, $FREEC_chr;
-	print $FREEC_refseq_fh ">$FREEC_chr\n$for_FREEC_refseq{$chr}\n";
-	my $FREEC_chr_fa = "./FREEC_refseq_chr/${FREEC_chr}.fa";
-	my $FREEC_chr_fa_fh = write_file($FREEC_chr_fa);
-	print $FREEC_chr_fa_fh ">$FREEC_chr\n$for_FREEC_refseq{$chr}\n";
-	close $FREEC_chr_fa_fh;
-    }
-    system("$samtools_dir/samtools faidx FREEC.refseq.fa");
-    # determine GC range for FREEC
-    my $lower_quantile = 15;
-    my $upper_quantile = 100 - $lower_quantile;
-    system("$bedtools_dir/bedtools makewindows -g FREEC.refseq.fa.fai -w $window_size > FREEC.refseq.window.$window_size.bed");
-    system("$bedtools_dir/bedtools nuc -fi FREEC.refseq.fa -bed FREEC.refseq.window.$window_size.bed > FREEC.refseq.GC_content.txt");
-    my $GC = "FREEC.refseq.GC_content.txt";
-    my $GC_fh = read_file($GC);
-    my %GC = parse_GC_file($GC_fh, $window_size);
-
     my $min_expected_gc = 0.4;
     my $max_expected_gc = 0.6;
+    if (-d "$base_dir/$output_dir/ref_genome_preprocessing") {
+	print "found pre-calculated ref_geome_preprocessing directory!\n";
+    } else {
+	print "generating ref_geome_preprocessing directory!\n";
+	system("mkdir -p $base_dir/$output_dir/ref_genome_preprocessing");
+	chdir("$base_dir/$output_dir/ref_genome_preprocessing");
+	if (defined $excluded_chr_list) {
+	    if (-e "$base_dir/$excluded_chr_list") {
+		system("$VARATHON_HOME/scripts/select_fasta_by_list.pl -i $base_dir/$ref_genome -l $base_dir/$excluded_chr_list -m reverse -o ref.genome.fa");
+	    } else {
+		die "cannot find $excluded_chr_list at $base_dir/$excluded_chr_list\n";
+	    }
+	} else {
+	    system("cp $base_dir/$ref_genome ref.genome.fa");
+	}
 
-    foreach my $chr (@FREEC_chr) {
-	my @GC_chr = ();
-	foreach my $i (sort {$a <=> $b} keys %{$GC{$chr}}) {
-	    if ($GC{$chr}{$i}{'effective_ratio'} > $min_mappability) {
-		push @GC_chr, $GC{$chr}{$i}{'GC'};
-	    }
-	}
-	if ((scalar @GC_chr) >= 10) {
-	    my $gc_stat_chr = Statistics::Descriptive::Full->new();
-	    $gc_stat_chr->add_data(@GC_chr);
-	    $gc_stat_chr->sort_data();
-	    $gc_stat_chr->presorted(1);
-	    # my $gc_mean_chr = sprintf("%.3f", $gc_stat_chr->mean());
-	    # my $gc_median_chr = sprintf("%.3f", $gc_stat_chr->median());
-	    my $gc_min_chr = sprintf("%.3f", $gc_stat_chr->min());
-	    my $gc_max_chr = sprintf("%.3f", $gc_stat_chr->max());
-	    # my $gc_stdev_chr = sprintf("%.3f", $gc_stat_chr->standard_deviation());
-	    my $gc_quantile_lower_chr = $gc_stat_chr->percentile($lower_quantile);
-	    $gc_quantile_lower_chr = sprintf("%.3f", $gc_quantile_lower_chr);
-	    my $gc_quantile_upper_chr = $gc_stat_chr->percentile($upper_quantile);
-	    $gc_quantile_upper_chr = sprintf("%.3f", $gc_quantile_upper_chr);
-	    if ($gc_quantile_lower_chr < $min_expected_gc) {
-		$min_expected_gc = $gc_quantile_lower_chr;
-	    }
-	    if ($gc_quantile_upper_chr > $max_expected_gc) {
-		$max_expected_gc = $gc_quantile_upper_chr;
-	    }
-	    print "chr=$chr\n";
-	    print "gc_quantile_upper_chr=$gc_quantile_upper_chr, gc_quantile_lower_chr=$gc_quantile_lower_chr\n";
-	    print "max_expected_gc=$max_expected_gc, min_expected_gc=$min_expected_gc\n";
-	    print "\n";
-	}
-    }
+	## index reference sequence
+	system("$samtools_dir/samtools faidx ref.genome.fa");
+	system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
+	my $for_FREEC_refseq = "ref.genome.fa";
+	my $for_FREEC_refseq_fh = read_file($for_FREEC_refseq);
+	my %for_FREEC_refseq = ();
+	my @for_FREEC_refseq = ();
+	parse_fasta_file($for_FREEC_refseq_fh, \%for_FREEC_refseq, \@for_FREEC_refseq);
 	
-    # mappability calculation by gemtools
-    system("$gemtools_dir/gemtools index -t $threads  -i FREEC.refseq.fa -o FREEC.refseq.gem");
-    system("$gemtools_dir/gem-mappability -T $threads -I FREEC.refseq.gem -l $raw_read_length -m 0.02 -e 0.02 -o FREEC.refseq");
-
-
+	my $FREEC_refseq = "FREEC.refseq.fa";
+	my $FREEC_refseq_fh = write_file($FREEC_refseq);
+	my %FREEC_refseq_chr_dict = ();
+	my @FREEC_chr = ();
+	# setup chr, chrLength   
+	system("mkdir FREEC_refseq_chr");
+	my $chr_index = 0;
+	foreach my $chr (@for_FREEC_refseq) {
+	    $chr_index++;
+	    my $FREEC_chr = "chr". $chr_index;
+	    $FREEC_refseq_chr_dict{'FREEC_to_original'}{$chr_index} = $chr;
+	    $FREEC_refseq_chr_dict{'original_to_FREEC'}{$chr} = $FREEC_chr;
+	    push @FREEC_chr, $FREEC_chr;
+	    print $FREEC_refseq_fh ">$FREEC_chr\n$for_FREEC_refseq{$chr}\n";
+	    my $FREEC_chr_fa = "./FREEC_refseq_chr/${FREEC_chr}.fa";
+	    my $FREEC_chr_fa_fh = write_file($FREEC_chr_fa);
+	    print $FREEC_chr_fa_fh ">$FREEC_chr\n$for_FREEC_refseq{$chr}\n";
+	    close $FREEC_chr_fa_fh;
+	}
+	system("$samtools_dir/samtools faidx FREEC.refseq.fa");
+	# determine GC range for FREEC
+	my $lower_quantile = 15;
+	my $upper_quantile = 100 - $lower_quantile;
+	system("$bedtools_dir/bedtools makewindows -g FREEC.refseq.fa.fai -w $window_size > FREEC.refseq.window.$window_size.bed");
+	system("$bedtools_dir/bedtools nuc -fi FREEC.refseq.fa -bed FREEC.refseq.window.$window_size.bed > FREEC.refseq.GC_content.txt");
+	my $GC = "FREEC.refseq.GC_content.txt";
+	my $GC_fh = read_file($GC);
+	my %GC = parse_GC_file($GC_fh, $window_size);
+	
+	foreach my $chr (@FREEC_chr) {
+	    my @GC_chr = ();
+	    foreach my $i (sort {$a <=> $b} keys %{$GC{$chr}}) {
+		if ($GC{$chr}{$i}{'effective_ratio'} > $min_mappability) {
+		    push @GC_chr, $GC{$chr}{$i}{'GC'};
+		}
+	    }
+	    if ((scalar @GC_chr) >= 10) {
+		my $gc_stat_chr = Statistics::Descriptive::Full->new();
+		$gc_stat_chr->add_data(@GC_chr);
+		$gc_stat_chr->sort_data();
+		$gc_stat_chr->presorted(1);
+		# my $gc_mean_chr = sprintf("%.3f", $gc_stat_chr->mean());
+		# my $gc_median_chr = sprintf("%.3f", $gc_stat_chr->median());
+		my $gc_min_chr = sprintf("%.3f", $gc_stat_chr->min());
+		my $gc_max_chr = sprintf("%.3f", $gc_stat_chr->max());
+		# my $gc_stdev_chr = sprintf("%.3f", $gc_stat_chr->standard_deviation());
+		my $gc_quantile_lower_chr = $gc_stat_chr->percentile($lower_quantile);
+		$gc_quantile_lower_chr = sprintf("%.3f", $gc_quantile_lower_chr);
+		my $gc_quantile_upper_chr = $gc_stat_chr->percentile($upper_quantile);
+		$gc_quantile_upper_chr = sprintf("%.3f", $gc_quantile_upper_chr);
+		if ($gc_quantile_lower_chr < $min_expected_gc) {
+		    $min_expected_gc = $gc_quantile_lower_chr;
+		}
+		if ($gc_quantile_upper_chr > $max_expected_gc) {
+		    $max_expected_gc = $gc_quantile_upper_chr;
+		}
+		print "chr=$chr\n";
+		print "gc_quantile_upper_chr=$gc_quantile_upper_chr, gc_quantile_lower_chr=$gc_quantile_lower_chr\n";
+		print "max_expected_gc=$max_expected_gc, min_expected_gc=$min_expected_gc\n";
+		print "\n";
+	    }
+	}
+	
+	# mappability calculation by gemtools
+	system("$gemtools_dir/gemtools index -t $threads  -i FREEC.refseq.fa -o FREEC.refseq.gem");
+	system("$gemtools_dir/gem-mappability -T $threads -I FREEC.refseq.gem -l $raw_read_length -m 0.02 -e 0.02 -o FREEC.refseq");
+    }
     my $sample_output_dir = "$base_dir/$output_dir/$sample_id";
     system("mkdir -p $sample_output_dir");
     chdir("$sample_output_dir") or die "cannot change directory to: $!\n";
@@ -190,20 +193,21 @@ foreach my $sample_id (@sample_table) {
 
     # scan for aneuploidy with FREEC
     if (-s "$base_dir/$excluded_chr_list") {
-    	system("perl $VARATHON_HOME/scripts/run_FREEC_wrapper_lite.pl -r ./../ref_genome_prepreprocessing/ref.genome.fa -bam $sample_id.filtered.bam -prefix $sample_id -ploidy $ploidy -bedtools $bedtools_dir/bedtools -samtools $samtools_dir/samtools -freec $freec_dir/freec -window $window_size -step $step_size -read_length_for_mappability $raw_read_length -min_mappability $min_mappability -mates_orientation 0 -excluded_chr_list $base_dir/$excluded_chr_list -max_expected_gc $max_expected_gc -min_expected_gc $min_expected_gc -threads $threads");
+    	system("perl $VARATHON_HOME/scripts/run_FREEC_wrapper_lite.pl -r ./../ref_genome_preprocessing/ref.genome.fa -bam $sample_id.filtered.bam -prefix $sample_id -ploidy $ploidy -bedtools $bedtools_dir/bedtools -samtools $samtools_dir/samtools -freec $freec_dir/freec -window $window_size -step $step_size -read_length_for_mappability $raw_read_length -min_mappability $min_mappability -mates_orientation 0 -excluded_chr_list $base_dir/$excluded_chr_list -max_expected_gc $max_expected_gc -min_expected_gc $min_expected_gc -threads $threads");
     } else {
     	system("perl $VARATHON_HOME/scripts/run_FREEC_wrapper_lite.pl -r ./../ref.genome.fa -bam $sample_id.realn.bam -prefix $sample_id -ploidy $ploidy -bedtools $bedtools_dir/bedtools -samtools $samtools_dir/samtools -freec $freec_dir/freec -window $window_size -step $step_size -read_length_for_mappability $raw_read_length -min_mappability $min_mappability -mates_orientation 0 -max_expected_gc $max_expected_gc -min_expected_gc $min_expected_gc  -threads $threads");
     }
-    system("Rscript --vanilla --slave $VARATHON_HOME/scripts/CNV_segmentation_by_DNAcopy.R --input $sample_id.FREEC.bam_ratio.txt --prefix $sample_id --window $window_size --ploidy $ploidy --genome_fai ./../ref_genome_prepreprocessing/ref.genome.fa.fai");
+    system("Rscript --vanilla --slave $VARATHON_HOME/scripts/CNV_segmentation_by_DNAcopy.R --input $sample_id.FREEC.bam_ratio.txt --prefix $sample_id --window $window_size --ploidy $ploidy --genome_fai ./../ref_genome_preprocessing/ref.genome.fa.fai");
     system("perl $VARATHON_HOME/scripts/adjust_FREEC_copynumber_by_DNAcopy_copynumber.pl -i $sample_id.FREEC.bam_ratio.sorted.txt -a $sample_id.FREEC.bam_ratio.sorted.resegmented.lite.txt -o $sample_id.FREEC.bam_ratio.sorted.adjusted.txt");
     if (-s "$sample_id.FREEC.bam_ratio.sorted.adjusted.txt") {
     	$local_time = localtime();
     	print "[$local_time] processing sample $sample_id with CNV calls plotting\n";
-
-    	# system("Rscript --vanilla --slave $VARATHON_HOME/scripts/plot_CNV_for_FREEC.R --ploidy $ploidy --genome_fai ./../ref_genome_prepreprocessing/ref.genome.fa.fai --input $sample_id.FREEC.bam_ratio.sorted.adjusted.txt --output $sample_id.CNV_plot.pdf");
+    	system("Rscript --vanilla --slave $VARATHON_HOME/scripts/plot_CNV_for_FREEC.R --ploidy $ploidy --genome_fai ./../ref_genome_preprocessing/ref.genome.fa.fai --input $sample_id.FREEC.bam_ratio.sorted.adjusted.txt --output $sample_id.CNV_plot.pdf");
     	system("rm Rplots.pdf");
+	$local_time = localtime();
+	print "[$local_time] processing sample $sample_id with CNV significance test calculation\n";
     	if (-s "$sample_id.FREEC.bam_ratio.sorted.resegmented.CNVs.txt") {
-    	    system("Rscript --vanilla --slave $VARATHON_HOME/scripts/assess_CNV_significance_for_FREEC.R --cnv $sample_id.FREEC.bam_ratio.sorted.resegmented.CNVs.txt --ratio $sample_id.FREEC.bam_ratio.sorted.adjusted.txt --genome_fai ./../ref_genome_prepreprocessing/ref.genome.fa.fai --output $sample_id.CNV_significance_test.txt");
+    	    system("Rscript --vanilla --slave $VARATHON_HOME/scripts/assess_CNV_significance_for_FREEC.R --cnv $sample_id.FREEC.bam_ratio.sorted.resegmented.CNVs.txt --ratio $sample_id.FREEC.bam_ratio.sorted.adjusted.txt --genome_fai ./../ref_genome_preprocessing/ref.genome.fa.fai --output $sample_id.CNV_significance_test.txt");
     	    my $sample_cnv_fh = read_file("$sample_id.CNV_significance_test.txt");
     	    parse_sample_cnv_file($sample_cnv_fh, $sample_id, "ref.refseq.fa", $all_samples_cnv_fh);
     	    close $sample_cnv_fh;
@@ -222,7 +226,6 @@ foreach my $sample_id (@sample_table) {
 	system("rm ref.genome.fa");
 	system("rm $sample_id.filtered.bam");
 	system("rm $sample_id.filtered.bam.bai");
-	system("rm for_CNV.sam");
 	system("rm for_CNV.bam");
 	system("rm FREEC.bam.header.old.sam");
 	system("rm FREEC.bam.header.new.sam");

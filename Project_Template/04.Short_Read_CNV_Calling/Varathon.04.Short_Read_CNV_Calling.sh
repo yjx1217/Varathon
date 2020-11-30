@@ -48,6 +48,7 @@ perl $VARATHON_HOME/scripts/batch_short_read_CNV_calling.pl \
     -excluded_chr_list $excluded_chr_list \
     -min_mapping_quality $min_mapping_quality \
     -window_size $window_size \
+    -step_size $window_size \
     -ploidy $ploidy \
     -debug $debug
 

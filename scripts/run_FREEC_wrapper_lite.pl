@@ -34,8 +34,8 @@ $window_size = 250;
 $step_size = $window_size;
 $min_mappability = 0.85;
 $excluded_chr_list = "";
-$min_expected_gc = 0; # this value will be automatically adjusted based on the input genome, so no need to change
-$max_expected_gc = 1; # this value will be automatically adjusted based on the input genome, so no need to change
+$min_expected_gc = 0.3; # this value will be automatically adjusted based on the input genome, so no need to change
+$max_expected_gc = 0.6; # this value will be automatically adjusted based on the input genome, so no need to change
 $mates_orientation = 0; # '0' for sorted bam, 'FR' for unsorted Illumina paired-ends, 'RF' for Illumina mate-pairs
 my $telocentromeric = 0;
 
@@ -67,7 +67,7 @@ if ($excluded_chr_list ne "") {
     my $excluded_chr_list_fh = read_file($excluded_chr_list);
     my %excluded_chr = parse_list_file($excluded_chr_list_fh);
     foreach my $chr (sort keys %excluded_chr) {
-	push @excluded_chr_list_regexp, "/$chr/d";
+	push @excluded_chr_list_regexp, "/$chr/{d;b}";
     }
 
     my @refseq_filtered = ();
@@ -111,7 +111,6 @@ foreach my $chr (@refseq) {
 # foreach my $chr (@refseq) {
 #     my $remainder = $refseq{$chr};
 #     my $i = 0;
-#     my $gc_stat_chr = Statistics::Descriptive::Full->new();
 #     my @GC_chr = ();
 #     while ((length $remainder) >= $window_size) {
 # 	$i++;
@@ -138,6 +137,8 @@ foreach my $chr (@refseq) {
 # 	}
 # 	$remainder = substr $remainder, $step_size;
 #     }
+#     if ((scalar @GC_chr) >= 10) {
+#     my $gc_stat_chr = Statistics::Descriptive::Full->new();
 #     $gc_stat_chr->add_data(@GC_chr);
 #     $gc_stat_chr->sort_data();
 #     $gc_stat_chr->presorted(1);
@@ -150,12 +151,13 @@ foreach my $chr (@refseq) {
 #     $gc_quantile_lower_chr = sprintf("%.3f", $gc_quantile_lower_chr);
 #     my $gc_quantile_upper_chr = $gc_stat_chr->percentile($upper_quantile);
 #     $gc_quantile_upper_chr = sprintf("%.3f", $gc_quantile_upper_chr);
-#     if ($gc_quantile_lower_chr > $min_expected_gc) {
+#     if ($gc_quantile_lower_chr < $min_expected_gc) {
 # 	$min_expected_gc = $gc_quantile_lower_chr;
 #     }
-#     if ($gc_quantile_upper_chr < $max_expected_gc) {
+#     if ($gc_quantile_upper_chr > $max_expected_gc) {
 # 	$max_expected_gc = $gc_quantile_upper_chr;
 #     }
+#   }
 # }
 
 print "min_expected_gc=$min_expected_gc, max_expected_gc=$max_expected_gc\n";
@@ -165,8 +167,7 @@ print "excluded_chr_list = $excluded_chr_list\n";
 my $excluded_chr_list_regexp = join ";", @excluded_chr_list_regexp;
 $excluded_chr_list_regexp = "'" . $excluded_chr_list_regexp . "'";
 print "excluded_chr_list_regexp = $excluded_chr_list_regexp\n";
-system("$samtools view -h $bam > for_CNV.sam");
-system("sed $excluded_chr_list_regexp < for_CNV.sam |$samtools view -b -h - > for_CNV.bam");
+system("$samtools view -h $bam |sed $excluded_chr_list_regexp |$samtools view -b -h - > for_CNV.bam");
 
 # reheader bam file for FREEC
 my $FREEC_bam_header_old = "FREEC.bam.header.old.sam";
@@ -188,11 +189,11 @@ print $FREEC_config_fh "###For more options see: http://boevalab.com/FREEC/tutor
 print $FREEC_config_fh "bedtools = $bedtools\n";
 print $FREEC_config_fh "samtools = $samtools\n";
 print $FREEC_config_fh "maxThreads = $threads\n";
-print $FREEC_config_fh "chrLenFile = ./../ref_genome_prepreprocessing/FREEC.refseq.fa.fai\n";
-print $FREEC_config_fh "chrFiles = ./../ref_genome_prepreprocessing/FREEC_refseq_chr\n";
+print $FREEC_config_fh "chrLenFile = ./../ref_genome_preprocessing/FREEC.refseq.fa.fai\n";
+print $FREEC_config_fh "chrFiles = ./../ref_genome_preprocessing/FREEC_refseq_chr\n";
 print $FREEC_config_fh "telocentromeric = 0\n";
 print $FREEC_config_fh "ploidy = $ploidy\n";
-print $FREEC_config_fh "gemMappabilityFile = ./../ref_genome_prepreprocessing/FREEC.refseq.mappability\n";
+print $FREEC_config_fh "gemMappabilityFile = ./../ref_genome_preprocessing/FREEC.refseq.mappability\n";
 print $FREEC_config_fh "minMappabilityPerWindow = $min_mappability\n";
 print $FREEC_config_fh "minExpectedGC = $min_expected_gc\n";
 print $FREEC_config_fh "maxExpectedGC = $max_expected_gc\n";
