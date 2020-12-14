@@ -113,8 +113,11 @@ foreach my $sample_id (@sample_table) {
     } else {
 	system("cp $base_dir/$ref_genome ref.genome.fa");
     }
+    ## index reference sequence
+    system("$samtools_dir/samtools faidx ref.genome.fa");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
     system("$bwa_dir/bwa index ref.genome.fa");
-    system("/usr/bin/time -v $bwa_dir/bwa mem -t $threads -M ref.genome.fa $sample_id.R1.trimmed.PE.fq.gz $sample_id.R2.trimmed.PE.fq.gz >$sample_id.sam");
+    system("/usr/bin/time -v $bwa_dir/bwa mem -t $threads -M ref.genome.fa $sample_id.R1.trimmed.PE.fq.gz $sample_id.R2.trimmed.PE.fq.gz | $samtools_dir/samtools view -bS -q $min_mapping_quality - >$sample_id.bam");
     if ($debug eq "no") {
 	system("rm ref.genome.fa.bwt");
 	system("rm ref.genome.fa.pac");
@@ -123,14 +126,6 @@ foreach my $sample_id (@sample_table) {
 	system("rm ref.genome.fa.sa");
 	system("rm $sample_id.R1.trimmed.PE.fq.gz");
 	system("rm $sample_id.R2.trimmed.PE.fq.gz");
-    }
-    ## index reference sequence
-    system("$samtools_dir/samtools faidx ref.genome.fa");
-    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
-    ## filter bam file by mapping quality
-    system("$samtools_dir/samtools view -bS -q $min_mapping_quality $sample_id.sam >$sample_id.bam");
-    if ($debug eq "no") {
-	system("rm $sample_id.sam");
     }
     ## sort bam file by picard-tools: SortSam
     system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar SortSam -INPUT $sample_id.bam -OUTPUT $sample_id.sort.bam -SORT_ORDER coordinate");
