@@ -128,7 +128,7 @@ foreach my $sample_id (@sample_table) {
 	system("rm $sample_id.R2.trimmed.PE.fq.gz");
     }
     ## sort bam file by picard-tools: SortSam
-    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar SortSam -INPUT $sample_id.bam -OUTPUT $sample_id.sort.bam -SORT_ORDER coordinate");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar SortSam -INPUT $sample_id.bam -OUTPUT $sample_id.sort.bam -SORT_ORDER coordinate -MAX_RECORDS_IN_RAM 1000000");
     if ($debug eq "no") {
 	system("rm $sample_id.bam");
     }
@@ -138,12 +138,12 @@ foreach my $sample_id (@sample_table) {
 	system("rm $sample_id.sort.bam");
     }
     ## add or replace read groups and sort
-    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar AddOrReplaceReadGroups -INPUT $sample_id.fixmate.bam -OUTPUT $sample_id.rdgrp.bam -SORT_ORDER coordinate -RGID $sample_id -RGLB $sample_id -RGPL 'Illumina' -RGPU $sample_id -RGSM $sample_id -RGCN 'RGCN'");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar AddOrReplaceReadGroups -INPUT $sample_id.fixmate.bam -OUTPUT $sample_id.rdgrp.bam -SORT_ORDER coordinate -MAX_RECORDS_IN_RAM 1000000 -RGID $sample_id -RGLB $sample_id -RGPL 'Illumina' -RGPU $sample_id -RGSM $sample_id -RGCN 'RGCN'");
     if ($debug eq "no") {
 	system("rm $sample_id.fixmate.bam");
     }
     # Picard tools remove duplicates
-    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar MarkDuplicates -INPUT $sample_id.rdgrp.bam -REMOVE_DUPLICATES true -METRICS_FILE $sample_id.dedup.matrics -OUTPUT $sample_id.dedup.bam"); 
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar MarkDuplicates -INPUT $sample_id.rdgrp.bam -MAX_FILE_HANDLES_FOR_READ_ENDS_MAP 1000 -REMOVE_DUPLICATES true -METRICS_FILE $sample_id.dedup.matrics -OUTPUT $sample_id.dedup.bam"); 
     if ($debug eq "no") {
 	system("rm $sample_id.rdgrp.bam");
     }
