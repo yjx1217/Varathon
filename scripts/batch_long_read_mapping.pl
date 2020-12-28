@@ -85,7 +85,6 @@ if (-d "$base_dir/$output_dir/ref_genome_preprocessing") {
     ## index reference sequence                                                                                                                                              
     system("$samtools_dir/samtools faidx ref.genome.fa");
     system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
-    system("$bwa_dir/bwa index ref.genome.fa");
 }
 
 
@@ -115,11 +114,13 @@ foreach my $sample_id (@sample_table) {
     system("mkdir tmp");
     print("mapping the reads by $long_read_mapper\n");
     system("cp $base_dir/$output_dir/ref_genome_preprocessing/ref.genome.fa .");
+    system("cp $base_dir/$output_dir/ref_genome_preprocessing/ref.genome.fa.fai .");
+    system("cp $base_dir/$output_dir/ref_genome_preprocessing/ref.genome.dict .");
     if ($long_read_mapper eq "minimap2") {
 	if ($long_read_technology eq "pacbio") {
-	    system("/usr/bin/time -v $minimap2_dir/minimap2 -t $threads -ax map-pb ref.genome.fa $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} > $sample_id.sam");
+	    system("/usr/bin/time -v $minimap2_dir/minimap2 -t $threads -ax map-pb ref.genome.fa $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} | $samtools_dir/samtools view -bS -q $min_mapping_quality - >$sample_id.bam");
 	} else {
-	    system("/usr/bin/time -v $minimap2_dir/minimap2 -t $threads -ax map-ont ref.genome.fa $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} > $sample_id.sam");
+	    system("/usr/bin/time -v $minimap2_dir/minimap2 -t $threads -ax map-ont ref.genome.fa $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} | $samtools_dir/samtools view -bS -q $min_mapping_quality - >$sample_id.bam");
 	}
 	if ($debug eq "no") {
 	    # system("rm ref.genome.fa.amb");
@@ -127,9 +128,9 @@ foreach my $sample_id (@sample_table) {
 	}
     } elsif ($long_read_mapper eq "ngmlr") {
 	if ($long_read_technology eq "pacbio") {
-	    system("/usr/bin/time -v $ngmlr_dir/ngmlr -t $threads -x pacbio -r ref.genome.fa -q $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} -o $sample_id.sam");
+	    system("/usr/bin/time -v $ngmlr_dir/ngmlr -t $threads -x pacbio -r ref.genome.fa -q $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} | $samtools_dir/samtools view -bS -q $min_mapping_quality - >$sample_id.bam");
 	} else {
-	    system("/usr/bin/time -v $ngmlr_dir/ngmlr -t $threads -x ont -r ref.genome.fa -q $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} -o $sample_id.sam");
+	    system("/usr/bin/time -v $ngmlr_dir/ngmlr -t $threads -x ont -r ref.genome.fa -q $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} | $samtools_dir/samtools view -bS -q $min_mapping_quality - >$sample_id.bam");
 	}
 	if ($debug eq "no") {
 	    system("rm ref.genome.fa-*.ngm");
@@ -140,8 +141,7 @@ foreach my $sample_id (@sample_table) {
 	# system("/usr/bin/time -v $last_dir/lastal -r 1 -q 1 -a 0 -b 2 -Q 1 -i 100M -P $threads ref.genome.lastdb $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} |gzip -c > $sample_id.maf.gz");
 	system("/usr/bin/time -v $java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
 	system("/usr/bin/time -v gzip -dc $sample_id.maf.gz | $last_dir/last-split - |gzip -c > $sample_id.lastsplit.maf.gz");
-	system("/usr/bin/time -v gzip -dc $sample_id.lastsplit.maf.gz | $last_dir/maf-convert -f ref.genome.dict sam -r \"ID:$sample_id PL:$long_read_technology SM:$sample_id\" -  > $sample_id.sam");
-	system("rm ref.genome.dict");
+	system("/usr/bin/time -v gzip -dc $sample_id.lastsplit.maf.gz | $last_dir/maf-convert -f ref.genome.dict sam -r \"ID:$sample_id PL:$long_read_technology SM:$sample_id\" -  | $samtools_dir/samtools view -bS -q $min_mapping_quality - >$sample_id.bam");
         if ($debug eq "no") {
 	    system("rm ref.genome.lastdb.tis");
 	    system("rm ref.genome.lastdb.ssp");
@@ -168,15 +168,7 @@ foreach my $sample_id (@sample_table) {
 	die "Error! Unrecognized long_read_mapper: $long_read_mapper! Exit! \n";
     }
     if ($long_read_mapper =~ /(minimap2|ngmlr|pbmm2|last|graphmap)/) {
-	## index reference sequence
-	system("$samtools_dir/samtools faidx ref.genome.fa");
-	system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
 	if ($long_read_mapper =~ /(minimap2|ngmlr|last|graphmap)/) {
-	    ## filter bam file by mapping quality
-	    system("$samtools_dir/samtools view -bS -q $min_mapping_quality $sample_id.sam >$sample_id.bam");
-	    if ($debug eq "no") {
-		system("rm $sample_id.sam");
-	    }
 	    ## sort bam file by picard-tools: SortSam
 	    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar SortSam -INPUT $sample_id.bam -OUTPUT $sample_id.sort.bam -SORT_ORDER coordinate -VALIDATION_STRINGENCY LENIENT -MAX_RECORDS_IN_RAM 50000");
 	} else {
