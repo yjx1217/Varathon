@@ -57,20 +57,45 @@ system("mkdir $output_dir");
 my $sample_count = 0;
 my $mapping_count = 0;
 
+print "Check the specified reference genome file:\n";
+my $ref_genome_file = "$base_dir/$ref_genome";
+if (-e $ref_genome_file) {
+    print "Successfully located the specified reference genome file: $ref_genome_file.\n";
+} else {
+    print "Cannot find the specified reference genome file: $ref_genome_file!\n";
+    print "Exit!\n";
+    exit;
+}
+
+if (-d "$base_dir/$output_dir/ref_genome_preprocessing") {
+    print "found pre-calculated ref_geome_preprocessing directory!\n";
+} else {
+    print "generating ref_geome_preprocessing directory!\n";
+    system("mkdir -p $base_dir/$output_dir/ref_genome_preprocessing");
+    chdir("$base_dir/$output_dir/ref_genome_preprocessing");
+    if (defined $excluded_chr_list) {
+        if (-e "$base_dir/$excluded_chr_list") {
+            system("$VARATHON_HOME/scripts/select_fasta_by_list.pl -i $base_dir/$ref_genome -l $base_dir/$excluded_chr_list -m reverse -o ref.genome.fa");
+        } else {
+            die "cannot find $excluded_chr_list at $base_dir/$excluded_chr_list\n";
+        }
+    } else {
+        system("cp $base_dir/$ref_genome ref.genome.fa");
+    }
+    ## index reference sequence                                                                                                                                              
+    system("$samtools_dir/samtools faidx ref.genome.fa");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
+    system("$bwa_dir/bwa index ref.genome.fa");
+}
+
+
+
 foreach my $sample_id (@sample_table) {
     my $local_time = localtime();
     print "[$local_time] processing sample $sample_id with long-read mapping\n";
     $sample_count++;
-    my $ref_genome_file = "$base_dir/$ref_genome";
+
     my $long_read_file = "$base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'}";
-    print "Check the specified reference genome file:\n";
-    if (-e $ref_genome_file) {
-	print "Successfully located the specified reference genome file: $ref_genome_file.\n";
-    } else {
-	print "Cannot find the specified reference genome file: $ref_genome_file!\n";
-	print "Exit!\n";
-	exit;
-    }
     print "Check the specified long read file:\n";
     if (-e $long_read_file) {
 	print "Successfully located the specified long read file: $long_read_file.\n";
@@ -88,16 +113,8 @@ foreach my $sample_id (@sample_table) {
     system("mkdir -p  $sample_output_dir");
     chdir("$sample_output_dir") or die "cannot change directory to: $!\n";
     system("mkdir tmp");
-    if (defined $excluded_chr_list) {
-	if (-e "$base_dir/$excluded_chr_list") { 
-	    system("$VARATHON_HOME/scripts/select_fasta_by_list.pl -i $base_dir/$ref_genome -l $base_dir/$excluded_chr_list -m reverse -o ref.genome.fa");
-	} else {
-	    die "$excluded_chr_list not found at $base_dir/$excluded_chr_list\n";
-	}
-    } else {
-	system("cp $base_dir/$ref_genome ref.genome.fa");
-    }
     print("mapping the reads by $long_read_mapper\n");
+    system("cp $base_dir/$output_dir/ref_genome_preprocessing/ref.genome.fa .");
     if ($long_read_mapper eq "minimap2") {
 	if ($long_read_technology eq "pacbio") {
 	    system("/usr/bin/time -v $minimap2_dir/minimap2 -t $threads -ax map-pb ref.genome.fa $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} > $sample_id.sam");

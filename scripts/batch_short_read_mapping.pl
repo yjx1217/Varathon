@@ -8,7 +8,7 @@ use Cwd;
 ##############################################################
 #  script: batch_short_read_mapping.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2020.04.27
+#  last edited: 2020.12.28
 #  description: run short-read mapping for a batch of samples
 #  example: perl batch_short_read_mapping.pl -i Master_Sample_Table.txt -b $batch_id -threads 4  -ref_genome ref_genome.fa -short_read_dir ./../00.Offspring_Reads -min_mapping_quality 30 -excluded_chr_list yeast.excluded_chr_list.txt
 ##############################################################
@@ -50,21 +50,46 @@ my $sample_count = 0;
 my $mapping_count = 0;
 my $adapter = "$trimmomatic_dir/adapters/TruSeq3-PE-2.fa";
 
+
+print "Check the specified reference genome file:\n";
+my $ref_genome_file = "$base_dir/$ref_genome";
+if (-e $ref_genome_file) {
+    print "Successfully located the specified reference genome file: $ref_genome_file.\n";
+} else {
+    print "Cannot find the specified reference genome file: $ref_genome_file!\n";
+    print "Exit!\n";
+    exit;
+}
+
+if (-d "$base_dir/$output_dir/ref_genome_preprocessing") {
+    print "found pre-calculated ref_geome_preprocessing directory!\n";
+} else {
+    print "generating ref_geome_preprocessing directory!\n";
+    system("mkdir -p $base_dir/$output_dir/ref_genome_preprocessing");
+    chdir("$base_dir/$output_dir/ref_genome_preprocessing");
+    if (defined $excluded_chr_list) {
+	if (-e "$base_dir/$excluded_chr_list") {
+	    system("$VARATHON_HOME/scripts/select_fasta_by_list.pl -i $base_dir/$ref_genome -l $base_dir/$excluded_chr_list -m reverse -o ref.genome.fa");
+	} else {
+	    die "cannot find $excluded_chr_list at $base_dir/$excluded_chr_list\n";
+	}
+    } else {
+	system("cp $base_dir/$ref_genome ref.genome.fa");
+    }
+    ## index reference sequence                                                                                                                                              
+    system("$samtools_dir/samtools faidx ref.genome.fa");
+    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
+    system("$bwa_dir/bwa index ref.genome.fa");
+}
+
 foreach my $sample_id (@sample_table) {
     my $local_time = localtime();
     print "[$local_time] processing sample $sample_id with short-read mapping\n";
     $sample_count++;
-    my $ref_genome_file = "$base_dir/$ref_genome";
+
     my $R1_read_file = "$base_dir/$short_read_dir/$sample_table{$sample_id}{'R1_read_file'}";
     my $R2_read_file = "$base_dir/$short_read_dir/$sample_table{$sample_id}{'R2_read_file'}";
-    print "Check the specified reference genome file:\n";
-    if (-e $ref_genome_file) {
-        print "Successfully located the specified reference genome file: $ref_genome_file.\n";
-    } else {
-        print "Cannot find the specified reference genome file: $ref_genome_file!\n";
-        print "Exit!\n";
-        exit;
-    }
+
     print "Check the specified short read file:\n";
     if (-e $R1_read_file) {
         print "Successfully located the specified short read file 1: $R1_read_file.\n";
@@ -103,20 +128,19 @@ foreach my $sample_id (@sample_table) {
     system("rm $sample_id.R1.trimmed.SE.fq.gz");
     system("rm $sample_id.R2.trimmed.SE.fq.gz");
     system("rm adapter.fa");
+
     print("mapping the reads by bwa\n");
-    if (defined $excluded_chr_list) {
-	if (-e "$base_dir/$excluded_chr_list") { 
-	    system("$VARATHON_HOME/scripts/select_fasta_by_list.pl -i $base_dir/$ref_genome -l $base_dir/$excluded_chr_list -m reverse -o ref.genome.fa");
-	} else {
-	    die "$excluded_chr_list not found at $base_dir/$excluded_chr_list\n";
-	}
-    } else {
-	system("cp $base_dir/$ref_genome ref.genome.fa");
-    }
     ## index reference sequence
-    system("$samtools_dir/samtools faidx ref.genome.fa");
-    system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
-    system("$bwa_dir/bwa index ref.genome.fa");
+    system("cp $base_dir/$output_dir/ref_genome_preprocessing/ref.genome.fa .");
+    system("cp $base_dir/$output_dir/ref_genome_preprocessing/ref.genome.fa.fai .");
+    system("cp $base_dir/$output_dir/ref_genome_preprocessing/ref.genome.dict .");
+    system("cp $base_dir/$output_dir/ref_genome_preprocessing/ref.genome.fa.bwt .");
+    system("cp $base_dir/$output_dir/ref_genome_preprocessing/ref.genome.fa.pac .");
+    system("cp $base_dir/$output_dir/ref_genome_preprocessing/ref.genome.fa.ann .");
+    system("cp $base_dir/$output_dir/ref_genome_preprocessing/ref.genome.fa.amb .");
+    system("cp $base_dir/$output_dir/ref_genome_preprocessing/ref.genome.fa.sa .");
+
+    # map short reads
     system("/usr/bin/time -v $bwa_dir/bwa mem -t $threads -M ref.genome.fa $sample_id.R1.trimmed.PE.fq.gz $sample_id.R2.trimmed.PE.fq.gz | $samtools_dir/samtools view -bS -q $min_mapping_quality - >$sample_id.bam");
     if ($debug eq "no") {
 	system("rm ref.genome.fa.bwt");
