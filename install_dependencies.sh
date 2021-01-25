@@ -73,11 +73,14 @@ then
 fi
 
 if [ ! -z "$INSTALL_DEPS" ]; then
+    echo ""
     echo "Installing LRSDAY build dependencies for Debian/Ubuntu."
     echo "sudo privileges are required and you will be prompted to enter your password"
     sudo apt-get update
     xargs -a debiandeps sudo apt-get install -y
 fi
+
+echo ""
 
 while getopts ":hc" opt
 do
@@ -107,7 +110,7 @@ SRA_DOWNLOAD_URL="https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/${SRA_VERSION}/srat
 ART_VERSION="mountrainier2016.06.05" # released on 2016.06.05
 ART_DOWNLOAD_URL="https://www.niehs.nih.gov/research/resources/assets/docs/artbin${ART_VERSION}linux64.tgz"
 
-SIMLORD_VERSION="1.0.2" # released on 2018.06.30
+SIMLORD_VERSION="1.0.4" # released on 2018.06.30
 
 DEEPSIMULATOR_VERSION="1.5.0" # released on 2019.06.16 
 DEEPSIMULATOR_GITHUB_COMMIT_VERSION="3c867c2" # committed on 2019.11.02
@@ -217,6 +220,14 @@ else
     MINICONDA2_DOWNLOAD_URL="https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh"
 fi
 
+MINICONDA3_VERSION="py37_4.8.2" # released on 2020.03.11
+if [[ "$mainland_china_installation" == "no" ]]
+then
+    MINICONDA3_DOWNLOAD_URL="https://repo.anaconda.com/miniconda/Miniconda3-${MINICONDA3_VERSION}-Linux-x86_64.sh"
+else
+    MINICONDA3_DOWNLOAD_URL="https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-${MINICONDA3_VERSION}-Linux-x86_64.sh"
+fi
+
 BEDTOOLS_VERSION="2.27.1" # released on 2017.12.15
 BEDTOOLS_DOWNLOAD_URL="https://github.com/arq5x/bedtools2/releases/download/v${BEDTOOLS_VERSION}/bedtools-${BEDTOOLS_VERSION}.tar.gz"
 
@@ -301,10 +312,13 @@ fi
 
 # install dependencies
 
-# ------------- Miniconda --------------------
+# ------------- Miniconda2 --------------------
 miniconda2_dir="$build_dir/miniconda2/bin"
 if [ -z $(check_installed $miniconda2_dir) ]; then
     cd $build_dir
+    clean "$build_dir/miniconda2"
+    echo ""
+    echo "Installing Miniconda2 ..."
     download $MINICONDA2_DOWNLOAD_URL "Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh"
     bash Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh -b -p $build_dir/miniconda2
     if [[ "$mainland_china_installation" == "yes" ]]
@@ -325,11 +339,43 @@ if [ -z $(check_installed $miniconda2_dir) ]; then
     note_installed $miniconda2_dir
 fi
 
+# ------------- Miniconda3 --------------------
+miniconda3_dir="$build_dir/miniconda3/bin"
+if [ -z $(check_installed $miniconda3_dir) ]; then
+    cd $build_dir
+    clean "$build_dir/miniconda3"
+    echo ""
+    echo "Installing Miniconda3 ..."
+    download $MINICONDA3_DOWNLOAD_URL "Miniconda3-${MINICONDA3_VERSION}-Linux-x86_64.sh"
+    bash Miniconda3-${MINICONDA3_VERSION}-Linux-x86_64.sh -b -p $build_dir/miniconda3
+    if [[ "$mainland_china_installation" == "yes" ]]
+    then
+        $miniconda3_dir/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+        $miniconda3_dir/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+        $miniconda3_dir/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
+        $miniconda3_dir/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
+        $miniconda3_dir/conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+    else 
+        $miniconda3_dir/conda config --add channels defaults
+        $miniconda3_dir/conda config --add channels bioconda
+        $miniconda3_dir/conda config --add channels conda-forge
+    fi
+    $miniconda3_dir/conda config --set show_channel_urls yes
+    # $miniconda3_dir/conda install -y -c conda-forge pypy3.7 
+    $miniconda3_dir/conda install -y -c conda-forge cython=0.29.21 numpy==1.19.5
+    # $miniconda3_dir/pip install cython==0.29.14 numpy==1.13.1
+    cd $build_dir
+    rm Miniconda3-${MINICONDA3_VERSION}-Linux-x86_64.sh 
+    note_installed $miniconda3_dir
+fi
+
 # ------------- simuG -------------------
 simuG_dir="$build_dir/simuG"
 if [ -z $(check_installed $simuG_dir) ]; then
     cd $build_dir
-    clean $simuG_dir
+    clean "$build_dir/simuG"
+    echo ""
+    echo "Installing simuG ..."
     echo "Download simuG-v${SIMUG_VERSION}"
     git clone $SIMUG_DOWNLOAD_URL
     cd simuG
@@ -341,7 +387,9 @@ fi
 sra_dir="$build_dir/sratoolkit.${SRA_VERSION}-centos_linux64/bin"
 if [ -z $(check_installed $sra_dir) ]; then
     cd $build_dir
-    clean $sra_dir
+    clean "$build_dir/sratoolkit.${SRA_VERSION}-centos_linux64"
+    echo ""
+    echo "Installing SRAtoolkit ..."
     echo "Download SRAtoolkit-v${SRA_VERSION}"
     download $SRA_DOWNLOAD_URL sratoolkit.${SRA_VERSION}-centos_linux64.tar.gz
     tar xvzf sratoolkit.${SRA_VERSION}-centos_linux64.tar.gz
@@ -353,7 +401,8 @@ fi
 art_dir="$build_dir/art_bin_MountRainier"
 if [ -z $(check_installed $art_dir) ]; then
     cd $build_dir
-    clean $art_dir
+    clean "$build_dir/art_bin_MountRainier"
+    echo "Installing ART ..."
     echo "Download ART-v${ART_VERSION}"
     download $ART_DOWNLOAD_URL artbin${ART_VERSION}linux64.tgz
     tar -zxf artbin${ART_VERSION}linux64.tgz
@@ -365,13 +414,16 @@ fi
 simlord_dir="$build_dir/simlord_conda_env/bin"
 if [ -z $(check_installed $simlord_dir) ]; then
     cd $build_dir
-    clean $simlord_dir
-    $miniconda2_dir/conda create -y -p $build_dir/simlord_conda_env python=3.6 pip numpy scipy cython
-    source $miniconda2_dir/activate $build_dir/simlord_conda_env
-    $miniconda2_dir/pip install pysam==0.15.3
-    $miniconda2_dir/pip install dinopy==2.0.3
-    $miniconda2_dir/pip install "simlord==${SIMLORD_VERSION}"
-    source $miniconda2_dir/deactivate
+    clean "$build_dir/simlord_conda_env"
+    echo ""
+    echo "Installing SimLoRD ..."
+    $miniconda3_dir/conda create -y -p $build_dir/simlord_conda_env python=3.7
+    source $miniconda3_dir/activate $build_dir/simlord_conda_env
+    $miniconda3_dir/conda install -y -c bioconda simlord=${SIMLORD_VERSION} 
+    # $miniconda3_dir/pip install pysam==0.15.3
+    # $miniconda3_dir/pip install dinopy==2.0.3
+    # $miniconda3_dir/pip install "simlord==${SIMLORD_VERSION}"
+    source $miniconda3_dir/deactivate
     note_installed $simlord_dir
 fi
 
@@ -379,7 +431,9 @@ fi
 deepsimulator_dir="$build_dir/DeepSimulator"
 if [ -z $(check_installed $deepsimulator_dir) ]; then
     cd $build_dir
-    clean $deepsimulator_dir
+    clean "$build_dir/DeepSimulator"
+    echo ""
+    echo "Installing DeepSimulator ..."
     echo "Download DeepSimulator-v${DEEPSIMULATOR_GITHUB_COMMIT_VERSION}"
     # git clone $DEEPSIMULATOR_DOWNLOAD_URL
     clone $DEEPSIMULATOR_DOWNLOAD_URL
@@ -426,7 +480,9 @@ fi
 trimmomatic_dir="$build_dir/Trimmomatic-${TRIMMOMATIC_VERSION}"
 if [ -z $(check_installed $trimmomatic_dir) ]; then
     cd $build_dir
-    clean $trimmomatic_dir
+    clean "$build_dir/Trimmomatic-${TRIMMOMATIC_VERSION}"
+    echo ""
+    echo "Installing Trimmomatic ..."
     echo "Download Trimmomatic-v${TRIMMOMATIC_VERSION}"
     download $TRIMMOMATIC_DOWNLOAD_URL "Trimmomatic-${TRIMMOMATIC_VERSION}.zip"
     unzip Trimmomatic-${TRIMMOMATIC_VERSION}.zip
@@ -442,12 +498,14 @@ fi
 porechop_dir="$build_dir/porechop_conda_env/bin"
 if [ -z $(check_installed $porechop_dir) ]; then
     cd $build_dir
-    clean $porechop_dir
+    clean "$build_dir/porechop_conda_env"
+    echo ""
+    echo "Installing Porechop ..."
     echo "Download Porechop-v${PORECHOP_VERSION}"
-    $miniconda2_dir/conda create -y -p $build_dir/porechop_conda_env python=3.7
-    source $miniconda2_dir/activate $build_dir/porechop_conda_env
-    $miniconda2_dir/conda install -y -c bioconda porechop=${PORECHOP_VERSION} 
-    source $miniconda2_dir/deactivate
+    $miniconda3_dir/conda create -y -p $build_dir/porechop_conda_env python=3.7
+    source $miniconda3_dir/activate $build_dir/porechop_conda_env
+    $miniconda3_dir/conda install -y -c bioconda porechop=${PORECHOP_VERSION} 
+    source $miniconda3_dir/deactivate
     note_installed $porechop_dir
 fi
 
@@ -455,7 +513,9 @@ fi
 filtlong_dir="$build_dir/Filtlong/bin"
 if [ -z $(check_installed $filtlong_dir) ]; then
     cd $build_dir
-    clean $filtlong_dir
+    clean "$build_dir/Filtlong"
+    echo ""
+    echo "Installing Filtlong ..."
     echo "Download Filtlong-v${FILTLONG_VERSION}"
     git clone $FILTLONG_DOWNLOAD_URL
     cd Filtlong
@@ -468,7 +528,9 @@ fi
 bwa_dir="$build_dir/bwa-${BWA_VERSION}"
 if [ -z $(check_installed $bwa_dir) ]; then
     cd $build_dir
-    clean $bwa_dir
+    clean "$build_dir/bwa-${BWA_VERSION}"
+    echo ""
+    echo "Installing BWA ..."
     echo "Download BWA-v${BWA_VERSION}"
     download $BWA_DOWNLOAD_URL "bwa-${BWA_VERSION}.tar.bz2"
     tar -xjf bwa-${BWA_VERSION}.tar.bz2
@@ -483,7 +545,9 @@ fi
 last_dir="$build_dir/last-${LAST_VERSION}/bin"
 if [ -z $(check_installed $last_dir) ]; then
     cd $build_dir
-    clean $last_dir
+    clean "$build_dir/last-${LAST_VERSION}"
+    echo ""
+    echo "Installing LAST ..."
     echo "Download LAST-v${LAST_VERSION}"
     download $LAST_DOWNLOAD_URL "last-${LAST_VERSION}.zip"
     unzip "last-${LAST_VERSION}.zip"
@@ -509,19 +573,23 @@ fi
 ngmlr_dir="$build_dir/ngmlr-${NGMLR_VERSION}"
 if [ -z $(check_installed $ngmlr_dir) ]; then
     cd $build_dir
-    clean $ngmlr_dir
+    clean "$build_dir/ngmlr-${NGMLR_VERSION}"
+    echo ""
+    echo "Installing NGMLR ..."
     echo "Download NGMLR-v${NGMLR_VERSION}"
     download $NGMLR_DOWNLOAD_URL "ngmlr-${NGMLR_VERSION}.tar.gz"
     tar xvzf "ngmlr-${NGMLR_VERSION}.tar.gz"
     rm ngmlr-${NGMLR_VERSION}.tar.gz
-    note_installed $bwa_dir
+    note_installed $ngmlr_dir
 fi
 
 # --------------- minimap2 ------------------
 minimap2_dir="$build_dir/minimap2-${MINIMAP2_VERSION}_x64-linux"
 if [ -z $(check_installed $minimap2_dir) ]; then
     cd $build_dir
-    clean $minimap2_dir
+    clean "$build_dir/minimap2-${MINIMAP2_VERSION}_x64-linux"
+    echo ""
+    echo "Installing minimap2 ..."
     echo "Download minimap2-v${MINIMAP2_VERSION}"
     download $MINIMAP2_DOWNLOAD_URL "minimap2-${MINIMAP2_VERSION}.tar.bz2"
     tar xvjf minimap2-${MINIMAP2_VERSION}.tar.bz2
@@ -533,12 +601,14 @@ fi
 pbmm2_dir="$build_dir/pbmm2_conda_env/bin"
 if [ -z $(check_installed $pbmm2_dir) ]; then
     cd $build_dir
-    clean $pbmm2_dir
+    clean "$build_dir/pbmm2_conda_env"
+    echo ""
+    echo "Installing pbmm2 ..."
     echo "Download pbmm2-v${PBMM2_VERSION}"
-    $miniconda2_dir/conda create -y -p $build_dir/pbmm2_conda_env python=3.6
-    source $miniconda2_dir/activate $build_dir/pbmm2_conda_env
-    $miniconda2_dir/conda install -y -c bioconda/label/cf201901 pbmm2
-    source $miniconda2_dir/deactivate
+    $miniconda3_dir/conda create -y -p $build_dir/pbmm2_conda_env python=3.7
+    source $miniconda3_dir/activate $build_dir/pbmm2_conda_env
+    $miniconda3_dir/conda install -y -c bioconda/label/cf201901 pbmm2
+    source $miniconda3_dir/deactivate
     note_installed $pbmm2_dir
 fi
 
@@ -546,7 +616,9 @@ fi
 graphmap_dir="$build_dir/graphmap/bin/Linux-x64"
 if [ -z $(check_installed $graphmap_dir) ]; then
     cd $build_dir
-    clean $graphmap_dir
+    clean "$build_dir/graphmap"
+    echo ""
+    echo "Installing graphmap ..."
     echo "Download graphmap-v${GRAPHMAP_VERSION}"
     git clone $GRAPHMAP_DOWNLOAD_URL
     cd graphmap
@@ -560,7 +632,7 @@ fi
 # graphmap2_dir="$build_dir/graphmap2-${GRAPHMAP2_VERSION}"
 # if [ -z $(check_installed $graphmap2_dir) ]; then
 # cd $build_dir
-# clean $graphmap2_dir
+# clean "$build_dir/graphmap2-${GRAPHMAP2_VERSION}"  
 # echo "Download graphmap2-v${GRAPHMAP2_VERSION}"
 # download $GRAPHMAP2_DOWNLOAD_URL "graphmap2-${GRAPHMAP2_VERSION}.zip"
 # unzip graphmap2-${GRAPHMAP2_VERSION}.zip
@@ -577,7 +649,9 @@ htslib_dir="$samtools_dir/htslib-${SAMTOOLS_VERSION}"
 tabix_dir="$samtools_dir/htslib-${SAMTOOLS_VERSION}"
 if [ -z $(check_installed $samtools_dir) ]; then
     cd $build_dir
-    clean $samtools_dir
+    clean "$build_dir/samtools-${SAMTOOLS_VERSION}"
+    echo ""
+    echo "Installing samtools ..."
     echo "Download samtools-v${SAMTOOLS_VERSION}"
     download $SAMTOOLS_DOWNLOAD_URL "samtools-${SAMTOOLS_VERSION}.tar.bz2"
     tar xvjf samtools-${SAMTOOLS_VERSION}.tar.bz2
@@ -598,11 +672,12 @@ PATH="$samtools_dir:$htslib_dir:$tabix_dir:${PATH}"
 picard_dir="$build_dir/Picard-v${PICARD_VERSION}"
 if [ -z $(check_installed $picard_dir) ]; then
     cd $build_dir
-    clean $picard_dir
+    clean "$build_dir/Picard-v${PICARD_VERSION}"
+    echo ""
+    echo "Installing Picard ..."
     echo "Download Picard-v${PICARD_VERSION}"
     download $PICARD_DOWNLOAD_URL "picard.jar"
     mkdir Picard-v${PICARD_VERSION}
-
     mv picard.jar $picard_dir
     cd $picard_dir
     chmod 755 picard.jar
@@ -613,7 +688,9 @@ fi
 gatk3_dir="$build_dir/GATK3"
 if [ -z $(check_installed $gatk3_dir) ]; then
     cd $build_dir
-    clean $gatk3_dir
+    clean "$build_dir/GATK3"
+    echo ""
+    echo "Installing GATK3 ..."
     echo "Create GATK3 folder for users' manual installation"
     mkdir GATK3
     cd GATK3
@@ -627,7 +704,9 @@ fi
 gemtools_dir="$build_dir/gemtools-${GEMTOOLS_VERSION}-i3/bin"
 if [ -z $(check_installed $gemtools_dir) ]; then
     cd $build_dir
-    clean $gemtools_dir
+    clean "$build_dir/gemtools-${GEMTOOLS_VERSION}-i3"
+    echo ""
+    echo "Installing GEMTOOLS ..."
     echo "Download GEMTOOLS-v${GEMTOOLS_VERSION}"
     download $GEMTOOLS_DOWNLOAD_URL "gemtools-${GEMTOOLS_VERSION}.tar.gz"
     tar xvzf "gemtools-${GEMTOOLS_VERSION}.tar.gz"
@@ -639,7 +718,9 @@ fi
 gatk4_dir="$build_dir/GATK4"
 if [ -z $(check_installed $gatk4_dir) ]; then
     cd $build_dir
-    clean $gatk4_dir
+    clean "$build_dir/GATK4"
+    echo ""
+    echo "Installing GATK4 ..."
     echo "Download GATK4-v${GATK4_VERSION}"
     download $GATK4_DOWNLOAD_URL "gatk-${GATK4_VERSION}.zip"
     unzip gatk-${GATK4_VERSION}.zip
@@ -656,7 +737,9 @@ freebayes_dir="$build_dir/freebayes/bin"
 vcflib_dir="$build_dir/freebayes/vcflib/bin"
 if [ -z $(check_installed $freebayes_dir) ]; then
     cd $build_dir
-    clean $freebayes_dir
+    clean "$build_dir/freebayes"
+    echo ""
+    echo "Installing freebaytes ..."
     echo "Download Freebayes-v${FREEBAYES_VERSION}"
     clone $FREEBAYES_DOWNLOAD_URL
     # git clone $FREEBAYES_DOWNLOAD_URL
@@ -724,9 +807,9 @@ if [ -z $(check_installed $freebayes_dir) ]; then
     cd ..
     cd ..
     cd ..
-    make -j $MAKE_JOBS
+    make 
     cd $build_dir/freebayes/vcflib
-    make -j $MAKE_JOBS
+    make 
     note_installed $freebayes_dir
 fi
 
@@ -734,16 +817,19 @@ fi
 clair_dir="$build_dir/clair_conda_env/bin"
 if [ -z $(check_installed $clair_dir) ]; then
     cd $build_dir
-    clean $clair_dir
+    clean "$build_dir/clair_conda_env"
+    echo ""
+    echo "Installing Clair ..."
     echo "Download Clair-v${CLAIR_VERSION}"
-    $miniconda2_dir/conda create -p $build_dir/clair_conda_env python=3.6 -y
-    source $miniconda2_dir/activate $build_dir/clair_conda_env
-    $miniconda2_dir/conda install -y -c bioconda clair=${CLAIR_VERSION}
+    $miniconda3_dir/conda create -y -p $build_dir/clair_conda_env python=3.7
+    source $miniconda3_dir/activate $build_dir/clair_conda_env
+    $miniconda3_dir/conda install -y -c bioconda clair=${CLAIR_VERSION}
     cd $build_dir/clair_conda_env
-    $miniconda2_dir/pypy3 -m ensurepip
-    $miniconda2_dir/pypy3 -m pip install --no-cache-dir intervaltree==3.0.2
+    # $miniconda3_dir/pypy3 -m ensurepip
+    # $miniconda3_dir/pypy3 -m pip install --no-cache-dir intervaltree==3.0.2
+    $miniconda3_dir/conda install -y -c conda-forge intervaltree==3.0.2  
     mkdir trained_models && cd trained_models
-    $miniconda2_dir/mkdir ont && cd ont
+    $miniconda3_dir/mkdir ont && cd ont
     wget -c --no-check-certificate http://www.bio8.cs.hku.hk/clair_models/ont/122HD34.tar
     tar -xf 122HD34.tar
     cd ..
@@ -755,7 +841,7 @@ if [ -z $(check_installed $clair_dir) ]; then
     wget -c --no-check-certificate http://www.bio8.cs.hku.hk/clair_models/illumina/12345.tar
     tar -xf 12345.tar
     cd ..
-    source $miniconda2_dir/deactivate
+    source $miniconda3_dir/deactivate
     note_installed $clair_dir
 fi
 
@@ -763,12 +849,13 @@ fi
 longshot_dir="$build_dir/longshot_conda_env/bin"
 if [ -z $(check_installed $longshot_dir) ]; then
     cd $build_dir
-    clean $longshot_dir
+    clean "$build_dir/longshot_conda_env"
+    echo "Installing longshot ..."
     echo "Download longshot-v${LONGSHOT_VERSION}"
-    $miniconda2_dir/conda create -y -p $build_dir/longshot_conda_env python=3.6
-    source $miniconda2_dir/activate $build_dir/longshot_conda_env
-    $miniconda2_dir/conda install -y -c bioconda longshot=v${LONGSHOT_VERSION}
-    source $miniconda2_dir/deactivate
+    $miniconda3_dir/conda create -y -p $build_dir/longshot_conda_env python=3.6
+    source $miniconda3_dir/activate $build_dir/longshot_conda_env
+    $miniconda3_dir/conda install -y -c bioconda longshot=v${LONGSHOT_VERSION}
+    source $miniconda3_dir/deactivate
     note_installed $longshot_dir    
 fi
 
@@ -776,7 +863,9 @@ fi
 freec_dir="$build_dir/FREEC-${FREEC_VERSION}"
 if [ -z $(check_installed $freec_dir) ]; then
     cd $build_dir
-    clean $freec_dir
+    clean "$build_dir/FREEC-${FREEC_VERSION}"
+    echo ""
+    echo "Installing FREEC ..."
     echo "Download FREEC-v${FREEC_VERSION}"
     download $FREEC_DOWNLOAD_URL "FREEC-${FREEC_VERSION}.tar.gz"
     tar xvzf FREEC-${FREEC_VERSION}.tar.gz
@@ -795,7 +884,9 @@ fi
 manta_dir="$build_dir/manta-${MANTA_VERSION}.centos6_x86_64/bin"
 if [ -z $(check_installed $manta_dir) ]; then
     cd $build_dir
-    clean $manta_dir
+    clean "$build_dir/manta-${MANTA_VERSION}.centos6_x86_64"
+    echo ""
+    echo "Installing Manta ..."
     echo "Download Manta-v${MANTA_VERSION}"
     download $MANTA_DOWNLOAD_URL "manta-${MANTA_VERSION}.centos6_x86_64.tar.bz2"
     tar xvjf manta-${MANTA_VERSION}.centos6_x86_64.tar.bz2
@@ -807,7 +898,9 @@ fi
 delly_dir="$build_dir/delly-${DELLY_VERSION}"
 if [ -z $(check_installed $delly_dir) ]; then
     cd $build_dir
-    clean $delly_dir
+    clean "$build_dir/delly-${DELLY_VERSION}"
+    echo ""
+    echo "Installing Delly ..."
     echo "Download Delly-v${DELLY_VERSION}"
     mkdir delly-${DELLY_VERSION}
     cd delly-${DELLY_VERSION}
@@ -821,12 +914,14 @@ fi
 svim_dir="$build_dir/svim_conda_env/bin"
 if [ -z $(check_installed $svim_dir) ]; then
     cd $build_dir
-    clean $svim_dir
+    clean "$build_dir/svim_conda_env"
+    echo ""
+    echo "Installing SVIM ..."
     echo "Download SVIM-v${SVIM_VERSION}"
-    $miniconda2_dir/conda create -y -p $build_dir/svim_conda_env python=3.6 
-    source $miniconda2_dir/activate $build_dir/svim_conda_env
-    $miniconda2_dir/conda install -y -c bioconda svim=${SVIM_VERSION}
-    source $miniconda2_dir/deactivate
+    $miniconda3_dir/conda create -y -p $build_dir/svim_conda_env python=3.6
+    source $miniconda3_dir/activate $build_dir/svim_conda_env
+    $miniconda3_dir/conda install -y -c bioconda svim=${SVIM_VERSION}
+    source $miniconda3_dir/deactivate
     note_installed $svim_dir
 fi
 
@@ -834,7 +929,9 @@ fi
 sniffles_dir="$build_dir/Sniffles-${SNIFFLES_VERSION}/bin/sniffles-core-1.0.11"
 if [ -z $(check_installed $sniffles_dir) ]; then
     cd $build_dir
-    clean $sniffles_dir
+    clean "$build_dir/Sniffles-${SNIFFLES_VERSION}"
+    echo ""
+    echo "Installing Sniffles ..."
     echo "Download Sniffles-v${SNIFFLES_VERSION}"
     download $SNIFFLES_DOWNLOAD_URL "Sniffles-${SNIFFLES_VERSION}.tar.gz"
     tar xvzf Sniffles-${SNIFFLES_VERSION}.tar.gz
@@ -852,11 +949,13 @@ fi
 pbsv_dir="$build_dir/pbsv_conda_env/bin"
 if [ -z $(check_installed $pbsv_dir) ]; then
     cd $build_dir
-    clean $pbsv_dir
-    $miniconda2_dir/conda create -y -p $build_dir/pbsv_conda_env python=3.6
-    source $miniconda2_dir/activate $build_dir/pbsv_conda_env
-    $miniconda2_dir/conda install -y -c bioconda pbsv=${PBSV_VERSION}
-    source $miniconda2_dir/deactivate
+    clean "$build_dir/pbsv_conda_env"
+    echo ""
+    echo "Installing pbsv ..."
+    $miniconda3_dir/conda create -y -p $build_dir/pbsv_conda_env python=3.7
+    source $miniconda3_dir/activate $build_dir/pbsv_conda_env
+    $miniconda3_dir/conda install -y -c bioconda pbsv=${PBSV_VERSION}
+    source $miniconda3_dir/deactivate
     note_installed $pbsv_dir
 fi
 
@@ -864,7 +963,9 @@ fi
 picky_dir="$build_dir/Picky/src"
 if [ -z $(check_installed $picky_dir) ]; then
     cd $build_dir
-    clean $picky_dir
+    clean "$build_dir/Picky"
+    echo ""
+    echo "Installing Picky ..."
     echo "Download PICKY-v${PICKY_VERSION}"
     git clone $PICKY_DOWNLOAD_URL
     cd $build_dir/Picky
@@ -876,11 +977,13 @@ fi
 nanosv_dir="$build_dir/nanosv_conda_env/bin"
 if [ -z $(check_installed $nanosv_dir) ]; then
     cd $build_dir
-    clean $nanosv_dir
-    $miniconda2_dir/conda create -y -p $build_dir/nanosv_conda_env python=3.6
-    source $miniconda2_dir/activate $build_dir/nanosv_conda_env
-    $miniconda2_dir/conda install -y -c bioconda nanosv=${NANOSV_VERSION}
-    source $miniconda2_dir/deactivate
+    clean "$build_dir/nanosv_conda_env"
+    echo ""
+    echo "Installing nanosv ..."
+    $miniconda3_dir/conda create -y -p $build_dir/nanosv_conda_env python=3.6
+    source $miniconda3_dir/activate $build_dir/nanosv_conda_env
+    $miniconda3_dir/conda install -y -c bioconda nanosv=${NANOSV_VERSION}
+    source $miniconda3_dir/deactivate
     note_installed $nanosv_dir
 fi
 
@@ -888,7 +991,9 @@ fi
 vt_dir="$build_dir/vt"
 if [ -z $(check_installed $vt_dir) ]; then
     cd $build_dir
-    clean $vt_dir
+    clean "$build_dir/vt"
+    echo ""
+    echo "Installing VT ..."
     echo "Download VT-v${VT_VERSION}"
     git clone $VT_DOWNLOAD_URL
     cd $vt_dir
@@ -902,7 +1007,9 @@ fi
 bcftools_dir="$build_dir/bcftools-${BCFTOOLS_VERSION}"
 if [ -z $(check_installed $bcftools_dir) ]; then
     cd $build_dir
-    clean $bcftools_dir
+    clean "$build_dir/bcftools-${BCFTOOLS_VERSION}"
+    echo ""
+    echo "Installing bcftools ..."
     echo "Download bcftools-v${BCFTOOLS_VERSION}"
     download $BCFTOOLS_DOWNLOAD_URL "bcftools-${BCFTOOLS_VERSION}.tar.bz2"
     tar xvjf bcftools-${BCFTOOLS_VERSION}.tar.bz2
@@ -918,7 +1025,9 @@ fi
 bedtools_dir="$build_dir/bedtools2/bin"
 if [ -z $(check_installed $bedtools_dir) ]; then
     cd $build_dir
-    clean $bedtools_dir
+    clean "$build_dir/bedtools2"
+    echo ""
+    echo "Installing bedtools ..."
     echo "Download bedtools-v${BEDTOOLS_VERSION}"
     download $BEDTOOLS_DOWNLOAD_URL "bedtools-${BEDTOOLS_VERSION}.tar.gz"
     tar xvzf bedtools-${BEDTOOLS_VERSION}.tar.gz
@@ -934,7 +1043,9 @@ blast_dir="$build_dir/ncbi-blast-${BLAST_VERSION}+/bin"
 windowmasker_dir="$build_dir/ncbi-blast-${BLAST_VERSION}+/bin"
 if [ -z $(check_installed $blast_dir) ]; then
     cd $build_dir
-    clean $blast_dir
+    clean "$build_dir/ncbi-blast-${BLAST_VERSION}+"
+    echo ""
+    echo "Installing ncbi-blast+ ..."
     echo "Download ncbi-blast-v${BLAST_VERSION}"
     download $BLAST_DOWNLOAD_URL "ncbi-blast-${BLAST_VERSION}+-x64-linux.tar.gz"
     tar xvzf ncbi-blast-${BLAST_VERSION}+-x64-linux.tar.gz
@@ -946,7 +1057,9 @@ fi
 rmblast_dir="$build_dir/ncbi-rmblastn-${RMBLAST_VERSION}/bin"
 if [ -z $(check_installed $rmblast_dir) ]; then
     cd $build_dir
-    clean $rmblast_dir
+    clean "$build_dir/ncbi-rmblastn-${RMBLAST_VERSION}"
+    echo ""
+    echo "Installing ncbi-rmblastn ..."
     echo "Download ncbi-rmblastn-v${BLAST_VERSION}"
     download $RMBLAST_DOWNLOAD_URL "ncbi-rmblastn-${RMBLAST_VERSION}-x64-linux.tar.gz"
     tar xvzf ncbi-rmblastn-${RMBLAST_VERSION}-x64-linux.tar.gz
@@ -960,7 +1073,9 @@ fi
 parallel_dir="$build_dir/parallel-${PARALLEL_VERSION}/bin"
 if [ -z $(check_installed $parallel_dir) ]; then
     cd $build_dir
-    clean $parallel_dir
+    clean "$build_dir/parallel-${PARALLEL_VERSION}"
+    echo ""
+    echo "Installing parallel ..."
     echo "Download parallel"
     download $PARALLEL_DOWNLOAD_URL "parallel_v${PARALLEL_VERSION}.tar.bz2"
     tar xvjf parallel_v${PARALLEL_VERSION}.tar.bz2
@@ -985,6 +1100,7 @@ echo "export PERL5LIB=${PERL5LIB}" >> env.sh
 echo "export R_LIBS=${R_LIBS}" >> env.sh
 echo "export cpanm_dir=${cpanm_dir}" >> env.sh
 echo "export miniconda2_dir=${miniconda2_dir}" >> env.sh
+echo "export miniconda3_dir=${miniconda3_dir}" >> env.sh
 echo "export simuG_dir=${simuG_dir}" >> env.sh
 echo "export sra_dir=${sra_dir}" >> env.sh
 echo "export art_dir=${art_dir}" >> env.sh
