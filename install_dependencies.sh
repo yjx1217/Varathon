@@ -271,6 +271,7 @@ PERL5LIB="$build_dir:$PERL5LIB"
 PERL5LIB="$build_dir/cpanm/perlmods/lib/perl5:$PERL5LIB"
 R_LIBS="$build_dir/R_libs:$R_LIBS"
 
+echo ""
 echo "[$(timestamp)] Installing Perl modules ..."
 cpanm_dir="$build_dir/cpanm"
 if [ -z $(check_installed $cpanm_dir) ]; then
@@ -288,6 +289,7 @@ if [ -z $(check_installed $cpanm_dir) ]; then
     note_installed $cpanm_dir
 fi    
 
+echo ""
 echo "[$(timestamp)] Installing R libraries ..."
 rlib_dir="$build_dir/R_libs"
 if [ -z $(check_installed $rlib_dir) ]; then
@@ -313,12 +315,12 @@ fi
 # install dependencies
 
 # ------------- Miniconda2 --------------------
+echo ""
+echo "[$(timestamp)] Installing miniconda2 ..."
 miniconda2_dir="$build_dir/miniconda2/bin"
 if [ -z $(check_installed $miniconda2_dir) ]; then
     cd $build_dir
     clean "$build_dir/miniconda2"
-    echo ""
-    echo "Installing Miniconda2 ..."
     download $MINICONDA2_DOWNLOAD_URL "Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh"
     bash Miniconda2-${MINICONDA2_VERSION}-Linux-x86_64.sh -b -p $build_dir/miniconda2
     if [[ "$mainland_china_installation" == "yes" ]]
@@ -340,12 +342,12 @@ if [ -z $(check_installed $miniconda2_dir) ]; then
 fi
 
 # ------------- Miniconda3 --------------------
+echo ""
+echo "[$(timestamp)] Installing miniconda3 ..."
 miniconda3_dir="$build_dir/miniconda3/bin"
 if [ -z $(check_installed $miniconda3_dir) ]; then
     cd $build_dir
     clean "$build_dir/miniconda3"
-    echo ""
-    echo "Installing Miniconda3 ..."
     download $MINICONDA3_DOWNLOAD_URL "Miniconda3-${MINICONDA3_VERSION}-Linux-x86_64.sh"
     bash Miniconda3-${MINICONDA3_VERSION}-Linux-x86_64.sh -b -p $build_dir/miniconda3
     if [[ "$mainland_china_installation" == "yes" ]]
@@ -370,12 +372,12 @@ if [ -z $(check_installed $miniconda3_dir) ]; then
 fi
 
 # ------------- simuG -------------------
+echo ""
+echo "[$(timestamp)] Installing simuG ..."
 simuG_dir="$build_dir/simuG"
 if [ -z $(check_installed $simuG_dir) ]; then
     cd $build_dir
     clean "$build_dir/simuG"
-    echo ""
-    echo "Installing simuG ..."
     echo "Download simuG-v${SIMUG_VERSION}"
     git clone $SIMUG_DOWNLOAD_URL
     cd simuG
@@ -384,12 +386,12 @@ if [ -z $(check_installed $simuG_dir) ]; then
 fi
 
 # ------------- SRA Toolkit -------------------
+echo ""
+echo "[$(timestamp)] Installing SRAtoolkit ..."
 sra_dir="$build_dir/sratoolkit.${SRA_VERSION}-centos_linux64/bin"
 if [ -z $(check_installed $sra_dir) ]; then
     cd $build_dir
     clean "$build_dir/sratoolkit.${SRA_VERSION}-centos_linux64"
-    echo ""
-    echo "Installing SRAtoolkit ..."
     echo "Download SRAtoolkit-v${SRA_VERSION}"
     download $SRA_DOWNLOAD_URL sratoolkit.${SRA_VERSION}-centos_linux64.tar.gz
     tar xvzf sratoolkit.${SRA_VERSION}-centos_linux64.tar.gz
@@ -398,11 +400,12 @@ if [ -z $(check_installed $sra_dir) ]; then
 fi
 
 # ------------- ART -------------------
+echo ""
+echo "[$(timestamp)] Installing ART ..."
 art_dir="$build_dir/art_bin_MountRainier"
 if [ -z $(check_installed $art_dir) ]; then
     cd $build_dir
     clean "$build_dir/art_bin_MountRainier"
-    echo "Installing ART ..."
     echo "Download ART-v${ART_VERSION}"
     download $ART_DOWNLOAD_URL artbin${ART_VERSION}linux64.tgz
     tar -zxf artbin${ART_VERSION}linux64.tgz
@@ -411,12 +414,12 @@ if [ -z $(check_installed $art_dir) ]; then
 fi
 
 # -------------- SimLoRD ----------------
+echo ""
+echo "[$(timestamp)] Installing SimLoRD ..."
 simlord_dir="$build_dir/simlord_conda_env/bin"
 if [ -z $(check_installed $simlord_dir) ]; then
     cd $build_dir
     clean "$build_dir/simlord_conda_env"
-    echo ""
-    echo "Installing SimLoRD ..."
     $miniconda3_dir/conda create -y -p $build_dir/simlord_conda_env python=3.7
     source $miniconda3_dir/activate $build_dir/simlord_conda_env
     $miniconda3_dir/conda install -y -c bioconda simlord=${SIMLORD_VERSION} 
@@ -428,12 +431,12 @@ if [ -z $(check_installed $simlord_dir) ]; then
 fi
 
 # -------------- DeepSimulator ----------------
+echo ""
+echo "[$(timestamp)] Installing DeepSimulator ..."
 deepsimulator_dir="$build_dir/DeepSimulator"
 if [ -z $(check_installed $deepsimulator_dir) ]; then
     cd $build_dir
     clean "$build_dir/DeepSimulator"
-    echo ""
-    echo "Installing DeepSimulator ..."
     echo "Download DeepSimulator-v${DEEPSIMULATOR_GITHUB_COMMIT_VERSION}"
     # git clone $DEEPSIMULATOR_DOWNLOAD_URL
     clone $DEEPSIMULATOR_DOWNLOAD_URL
@@ -477,12 +480,12 @@ if [ -z $(check_installed $deepsimulator_dir) ]; then
     note_installed $deepsimulator_dir
 fi
 # --------------- Trimmomatic -----------------
+echo ""
+echo "[$(timestamp)] Installing Trimmomatic ..."
 trimmomatic_dir="$build_dir/Trimmomatic-${TRIMMOMATIC_VERSION}"
 if [ -z $(check_installed $trimmomatic_dir) ]; then
     cd $build_dir
     clean "$build_dir/Trimmomatic-${TRIMMOMATIC_VERSION}"
-    echo ""
-    echo "Installing Trimmomatic ..."
     echo "Download Trimmomatic-v${TRIMMOMATIC_VERSION}"
     download $TRIMMOMATIC_DOWNLOAD_URL "Trimmomatic-${TRIMMOMATIC_VERSION}.zip"
     unzip Trimmomatic-${TRIMMOMATIC_VERSION}.zip
@@ -495,12 +498,12 @@ if [ -z $(check_installed $trimmomatic_dir) ]; then
 fi
 
 # --------------- Porechop ------------------
+echo ""
+echo "[$(timestamp)] Installing Porechop ..."
 porechop_dir="$build_dir/porechop_conda_env/bin"
 if [ -z $(check_installed $porechop_dir) ]; then
     cd $build_dir
     clean "$build_dir/porechop_conda_env"
-    echo ""
-    echo "Installing Porechop ..."
     echo "Download Porechop-v${PORECHOP_VERSION}"
     $miniconda3_dir/conda create -y -p $build_dir/porechop_conda_env python=3.7
     source $miniconda3_dir/activate $build_dir/porechop_conda_env
@@ -510,12 +513,12 @@ if [ -z $(check_installed $porechop_dir) ]; then
 fi
 
 # --------------- Filtlong ------------------
+echo ""
+echo "[$(timestamp)] Installing Filtlong ..."
 filtlong_dir="$build_dir/Filtlong/bin"
 if [ -z $(check_installed $filtlong_dir) ]; then
     cd $build_dir
     clean "$build_dir/Filtlong"
-    echo ""
-    echo "Installing Filtlong ..."
     echo "Download Filtlong-v${FILTLONG_VERSION}"
     git clone $FILTLONG_DOWNLOAD_URL
     cd Filtlong
@@ -525,12 +528,12 @@ if [ -z $(check_installed $filtlong_dir) ]; then
 fi
 
 # ------------- BWA -------------------
+echo ""
+echo "[$(timestamp)] Installing BWA ..."
 bwa_dir="$build_dir/bwa-${BWA_VERSION}"
 if [ -z $(check_installed $bwa_dir) ]; then
     cd $build_dir
     clean "$build_dir/bwa-${BWA_VERSION}"
-    echo ""
-    echo "Installing BWA ..."
     echo "Download BWA-v${BWA_VERSION}"
     download $BWA_DOWNLOAD_URL "bwa-${BWA_VERSION}.tar.bz2"
     tar -xjf bwa-${BWA_VERSION}.tar.bz2
@@ -541,13 +544,13 @@ if [ -z $(check_installed $bwa_dir) ]; then
     note_installed $bwa_dir
 fi
 
-# ------------- LAST ------------------- 
+# ------------- LAST -------------------
+echo ""
+echo "[$(timestamp)] Installing LAST ..."
 last_dir="$build_dir/last-${LAST_VERSION}/bin"
 if [ -z $(check_installed $last_dir) ]; then
     cd $build_dir
     clean "$build_dir/last-${LAST_VERSION}"
-    echo ""
-    echo "Installing LAST ..."
     echo "Download LAST-v${LAST_VERSION}"
     download $LAST_DOWNLOAD_URL "last-${LAST_VERSION}.zip"
     unzip "last-${LAST_VERSION}.zip"
@@ -570,12 +573,12 @@ if [ -z $(check_installed $last_dir) ]; then
 fi
 
 # ------------- NGMLR ------------------- 
+echo ""
+echo "[$(timestamp)] Installing NGMLR ..."
 ngmlr_dir="$build_dir/ngmlr-${NGMLR_VERSION}"
 if [ -z $(check_installed $ngmlr_dir) ]; then
     cd $build_dir
     clean "$build_dir/ngmlr-${NGMLR_VERSION}"
-    echo ""
-    echo "Installing NGMLR ..."
     echo "Download NGMLR-v${NGMLR_VERSION}"
     download $NGMLR_DOWNLOAD_URL "ngmlr-${NGMLR_VERSION}.tar.gz"
     tar xvzf "ngmlr-${NGMLR_VERSION}.tar.gz"
@@ -584,12 +587,12 @@ if [ -z $(check_installed $ngmlr_dir) ]; then
 fi
 
 # --------------- minimap2 ------------------
+echo ""
+echo "[$(timestamp)] Installing minimap2 ..."
 minimap2_dir="$build_dir/minimap2-${MINIMAP2_VERSION}_x64-linux"
 if [ -z $(check_installed $minimap2_dir) ]; then
     cd $build_dir
     clean "$build_dir/minimap2-${MINIMAP2_VERSION}_x64-linux"
-    echo ""
-    echo "Installing minimap2 ..."
     echo "Download minimap2-v${MINIMAP2_VERSION}"
     download $MINIMAP2_DOWNLOAD_URL "minimap2-${MINIMAP2_VERSION}.tar.bz2"
     tar xvjf minimap2-${MINIMAP2_VERSION}.tar.bz2
@@ -598,12 +601,12 @@ if [ -z $(check_installed $minimap2_dir) ]; then
 fi
 
 # --------------- pbmm2 -----------------
+echo ""
+echo "[$(timestamp)] Installing pbmm2 ..."
 pbmm2_dir="$build_dir/pbmm2_conda_env/bin"
 if [ -z $(check_installed $pbmm2_dir) ]; then
     cd $build_dir
     clean "$build_dir/pbmm2_conda_env"
-    echo ""
-    echo "Installing pbmm2 ..."
     echo "Download pbmm2-v${PBMM2_VERSION}"
     $miniconda3_dir/conda create -y -p $build_dir/pbmm2_conda_env python=3.7
     source $miniconda3_dir/activate $build_dir/pbmm2_conda_env
@@ -613,12 +616,12 @@ if [ -z $(check_installed $pbmm2_dir) ]; then
 fi
 
 # --------------- GraphMap ------------------
+echo ""
+echo "[$(timestamp)] Installing GraphMap ..."
 graphmap_dir="$build_dir/graphmap/bin/Linux-x64"
 if [ -z $(check_installed $graphmap_dir) ]; then
     cd $build_dir
     clean "$build_dir/graphmap"
-    echo ""
-    echo "Installing graphmap ..."
     echo "Download graphmap-v${GRAPHMAP_VERSION}"
     git clone $GRAPHMAP_DOWNLOAD_URL
     cd graphmap
@@ -629,6 +632,8 @@ if [ -z $(check_installed $graphmap_dir) ]; then
 fi
 
 # # --------------- GraphMap2 ------------------
+# echo ""
+# echo "[$(timestamp)] Installing GraphMap2 ..."
 # graphmap2_dir="$build_dir/graphmap2-${GRAPHMAP2_VERSION}"
 # if [ -z $(check_installed $graphmap2_dir) ]; then
 # cd $build_dir
@@ -644,14 +649,14 @@ fi
 # fi
 
 # --------------- samtools -----------------
+echo ""
+echo "[$(timestamp)] Installing samtools ..."
 samtools_dir="$build_dir/samtools-${SAMTOOLS_VERSION}"
 htslib_dir="$samtools_dir/htslib-${SAMTOOLS_VERSION}"
 tabix_dir="$samtools_dir/htslib-${SAMTOOLS_VERSION}"
 if [ -z $(check_installed $samtools_dir) ]; then
     cd $build_dir
     clean "$build_dir/samtools-${SAMTOOLS_VERSION}"
-    echo ""
-    echo "Installing samtools ..."
     echo "Download samtools-v${SAMTOOLS_VERSION}"
     download $SAMTOOLS_DOWNLOAD_URL "samtools-${SAMTOOLS_VERSION}.tar.bz2"
     tar xvjf samtools-${SAMTOOLS_VERSION}.tar.bz2
@@ -669,12 +674,12 @@ fi
 PATH="$samtools_dir:$htslib_dir:$tabix_dir:${PATH}"
 
 # --------------- Picard -----------------
+echo ""
+echo "[$(timestamp)] Installing picard ..."
 picard_dir="$build_dir/Picard-v${PICARD_VERSION}"
 if [ -z $(check_installed $picard_dir) ]; then
     cd $build_dir
     clean "$build_dir/Picard-v${PICARD_VERSION}"
-    echo ""
-    echo "Installing Picard ..."
     echo "Download Picard-v${PICARD_VERSION}"
     download $PICARD_DOWNLOAD_URL "picard.jar"
     mkdir Picard-v${PICARD_VERSION}
@@ -685,13 +690,12 @@ if [ -z $(check_installed $picard_dir) ]; then
 fi
 
 # --------------- GATK3 ------------------
+echo ""
+echo "[$(timestamp)] Installing GATK3 ..."
 gatk3_dir="$build_dir/GATK3"
 if [ -z $(check_installed $gatk3_dir) ]; then
     cd $build_dir
     clean "$build_dir/GATK3"
-    echo ""
-    echo "Installing GATK3 ..."
-    echo "Create GATK3 folder for users' manual installation"
     mkdir GATK3
     cd GATK3
     wget https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/${SRA_VERSION}/GenomeAnalysisTK.jar
@@ -700,13 +704,13 @@ if [ -z $(check_installed $gatk3_dir) ]; then
     note_installed $gatk3_dir
 fi
 
-# --------------- GEM-Tools -----------------                                                                                        
+# --------------- GEM-Tools -----------------
+echo ""
+echo "[$(timestamp)] Installing gemtools ..."                                                                                       
 gemtools_dir="$build_dir/gemtools-${GEMTOOLS_VERSION}-i3/bin"
 if [ -z $(check_installed $gemtools_dir) ]; then
     cd $build_dir
     clean "$build_dir/gemtools-${GEMTOOLS_VERSION}-i3"
-    echo ""
-    echo "Installing GEMTOOLS ..."
     echo "Download GEMTOOLS-v${GEMTOOLS_VERSION}"
     download $GEMTOOLS_DOWNLOAD_URL "gemtools-${GEMTOOLS_VERSION}.tar.gz"
     tar xvzf "gemtools-${GEMTOOLS_VERSION}.tar.gz"
@@ -714,13 +718,13 @@ if [ -z $(check_installed $gemtools_dir) ]; then
     note_installed $gemtools_dir
 fi
 
-# --------------- GATK4 ------------------                                                                                                
+# --------------- GATK4 ------------------   
+echo ""
+echo "[$(timestamp)] Installing GATK4 ..."
 gatk4_dir="$build_dir/GATK4"
 if [ -z $(check_installed $gatk4_dir) ]; then
     cd $build_dir
     clean "$build_dir/GATK4"
-    echo ""
-    echo "Installing GATK4 ..."
     echo "Download GATK4-v${GATK4_VERSION}"
     download $GATK4_DOWNLOAD_URL "gatk-${GATK4_VERSION}.zip"
     unzip gatk-${GATK4_VERSION}.zip
@@ -733,13 +737,13 @@ if [ -z $(check_installed $gatk4_dir) ]; then
 fi
 
 # --------------- Freebayes -----------------
+echo ""
+echo "[$(timestamp)] Installing freebayes ..."
 freebayes_dir="$build_dir/freebayes/bin"
 vcflib_dir="$build_dir/freebayes/vcflib/bin"
 if [ -z $(check_installed $freebayes_dir) ]; then
     cd $build_dir
     clean "$build_dir/freebayes"
-    echo ""
-    echo "Installing freebaytes ..."
     echo "Download Freebayes-v${FREEBAYES_VERSION}"
     clone $FREEBAYES_DOWNLOAD_URL
     # git clone $FREEBAYES_DOWNLOAD_URL
@@ -813,13 +817,13 @@ if [ -z $(check_installed $freebayes_dir) ]; then
     note_installed $freebayes_dir
 fi
 
-# --------------- Clair -----------------   
+# --------------- Clair -----------------
+echo ""
+echo "[$(timestamp)] Installing Clair ..."
 clair_dir="$build_dir/clair_conda_env/bin"
 if [ -z $(check_installed $clair_dir) ]; then
     cd $build_dir
     clean "$build_dir/clair_conda_env"
-    echo ""
-    echo "Installing Clair ..."
     echo "Download Clair-v${CLAIR_VERSION}"
     $miniconda3_dir/conda create -y -p $build_dir/clair_conda_env python=3.7
     source $miniconda3_dir/activate $build_dir/clair_conda_env
@@ -845,12 +849,13 @@ if [ -z $(check_installed $clair_dir) ]; then
     note_installed $clair_dir
 fi
 
-# --------------- longshot -----------------   
+# --------------- longshot -----------------
+echo ""
+echo "[$(timestamp)] Installing longshot ..."
 longshot_dir="$build_dir/longshot_conda_env/bin"
 if [ -z $(check_installed $longshot_dir) ]; then
     cd $build_dir
     clean "$build_dir/longshot_conda_env"
-    echo "Installing longshot ..."
     echo "Download longshot-v${LONGSHOT_VERSION}"
     $miniconda3_dir/conda create -y -p $build_dir/longshot_conda_env python=3.6
     source $miniconda3_dir/activate $build_dir/longshot_conda_env
@@ -860,12 +865,12 @@ if [ -z $(check_installed $longshot_dir) ]; then
 fi
 
 # ----------------- FREEC --------------------
+echo ""
+echo "[$(timestamp)] Installing FREEC ..."
 freec_dir="$build_dir/FREEC-${FREEC_VERSION}"
 if [ -z $(check_installed $freec_dir) ]; then
     cd $build_dir
     clean "$build_dir/FREEC-${FREEC_VERSION}"
-    echo ""
-    echo "Installing FREEC ..."
     echo "Download FREEC-v${FREEC_VERSION}"
     download $FREEC_DOWNLOAD_URL "FREEC-${FREEC_VERSION}.tar.gz"
     tar xvzf FREEC-${FREEC_VERSION}.tar.gz
@@ -881,12 +886,12 @@ if [ -z $(check_installed $freec_dir) ]; then
 fi
 
 # ------------------ Manta ---------------------
+echo ""
+echo "[$(timestamp)] Installing Manta ..."
 manta_dir="$build_dir/manta-${MANTA_VERSION}.centos6_x86_64/bin"
 if [ -z $(check_installed $manta_dir) ]; then
     cd $build_dir
     clean "$build_dir/manta-${MANTA_VERSION}.centos6_x86_64"
-    echo ""
-    echo "Installing Manta ..."
     echo "Download Manta-v${MANTA_VERSION}"
     download $MANTA_DOWNLOAD_URL "manta-${MANTA_VERSION}.centos6_x86_64.tar.bz2"
     tar xvjf manta-${MANTA_VERSION}.centos6_x86_64.tar.bz2
@@ -895,12 +900,12 @@ if [ -z $(check_installed $manta_dir) ]; then
 fi
 
 # ------------------ Delly ---------------------
+echo ""
+echo "[$(timestamp)] Installing Delly ..."
 delly_dir="$build_dir/delly-${DELLY_VERSION}"
 if [ -z $(check_installed $delly_dir) ]; then
     cd $build_dir
     clean "$build_dir/delly-${DELLY_VERSION}"
-    echo ""
-    echo "Installing Delly ..."
     echo "Download Delly-v${DELLY_VERSION}"
     mkdir delly-${DELLY_VERSION}
     cd delly-${DELLY_VERSION}
@@ -911,12 +916,12 @@ if [ -z $(check_installed $delly_dir) ]; then
 fi
 
 # ------------------ SVIM ---------------------
+echo ""
+echo "[$(timestamp)] Installing SVIM ..."
 svim_dir="$build_dir/svim_conda_env/bin"
 if [ -z $(check_installed $svim_dir) ]; then
     cd $build_dir
     clean "$build_dir/svim_conda_env"
-    echo ""
-    echo "Installing SVIM ..."
     echo "Download SVIM-v${SVIM_VERSION}"
     $miniconda3_dir/conda create -y -p $build_dir/svim_conda_env python=3.6
     source $miniconda3_dir/activate $build_dir/svim_conda_env
@@ -926,12 +931,12 @@ if [ -z $(check_installed $svim_dir) ]; then
 fi
 
 # ------------------ Sniffles ---------------------
+echo ""
+echo "[$(timestamp)] Installing Sniffles ..."
 sniffles_dir="$build_dir/Sniffles-${SNIFFLES_VERSION}/bin/sniffles-core-1.0.11"
 if [ -z $(check_installed $sniffles_dir) ]; then
     cd $build_dir
     clean "$build_dir/Sniffles-${SNIFFLES_VERSION}"
-    echo ""
-    echo "Installing Sniffles ..."
     echo "Download Sniffles-v${SNIFFLES_VERSION}"
     download $SNIFFLES_DOWNLOAD_URL "Sniffles-${SNIFFLES_VERSION}.tar.gz"
     tar xvzf Sniffles-${SNIFFLES_VERSION}.tar.gz
@@ -946,12 +951,12 @@ if [ -z $(check_installed $sniffles_dir) ]; then
 fi
 
 # ------------------ PBSV ---------------------
+echo ""
+echo "[$(timestamp)] Installing PBSV ..."
 pbsv_dir="$build_dir/pbsv_conda_env/bin"
 if [ -z $(check_installed $pbsv_dir) ]; then
     cd $build_dir
     clean "$build_dir/pbsv_conda_env"
-    echo ""
-    echo "Installing pbsv ..."
     $miniconda3_dir/conda create -y -p $build_dir/pbsv_conda_env python=3.7
     source $miniconda3_dir/activate $build_dir/pbsv_conda_env
     $miniconda3_dir/conda install -y -c bioconda pbsv=${PBSV_VERSION}
@@ -959,13 +964,13 @@ if [ -z $(check_installed $pbsv_dir) ]; then
     note_installed $pbsv_dir
 fi
 
-# ------------------ PICKY ---------------------   
+# ------------------ PICKY ---------------------
+echo ""
+echo "[$(timestamp)] Installing Picky ..."
 picky_dir="$build_dir/Picky/src"
 if [ -z $(check_installed $picky_dir) ]; then
     cd $build_dir
     clean "$build_dir/Picky"
-    echo ""
-    echo "Installing Picky ..."
     echo "Download PICKY-v${PICKY_VERSION}"
     git clone $PICKY_DOWNLOAD_URL
     cd $build_dir/Picky
@@ -974,12 +979,12 @@ if [ -z $(check_installed $picky_dir) ]; then
 fi
 
 # ------------------ NANOSV ---------------------
+echo ""
+echo "[$(timestamp)] Installing NanoSV..."
 nanosv_dir="$build_dir/nanosv_conda_env/bin"
 if [ -z $(check_installed $nanosv_dir) ]; then
     cd $build_dir
     clean "$build_dir/nanosv_conda_env"
-    echo ""
-    echo "Installing nanosv ..."
     $miniconda3_dir/conda create -y -p $build_dir/nanosv_conda_env python=3.6
     source $miniconda3_dir/activate $build_dir/nanosv_conda_env
     $miniconda3_dir/conda install -y -c bioconda nanosv=${NANOSV_VERSION}
@@ -988,12 +993,12 @@ if [ -z $(check_installed $nanosv_dir) ]; then
 fi
 
 # ------------------ VT ---------------------
+echo ""
+echo "[$(timestamp)] Installing VT ..."
 vt_dir="$build_dir/vt"
 if [ -z $(check_installed $vt_dir) ]; then
     cd $build_dir
     clean "$build_dir/vt"
-    echo ""
-    echo "Installing VT ..."
     echo "Download VT-v${VT_VERSION}"
     git clone $VT_DOWNLOAD_URL
     cd $vt_dir
@@ -1004,12 +1009,12 @@ if [ -z $(check_installed $vt_dir) ]; then
 fi
 
 # --------------- bcftools ------------------
+echo ""
+echo "[$(timestamp)] Installing bcftools ..."
 bcftools_dir="$build_dir/bcftools-${BCFTOOLS_VERSION}"
 if [ -z $(check_installed $bcftools_dir) ]; then
     cd $build_dir
     clean "$build_dir/bcftools-${BCFTOOLS_VERSION}"
-    echo ""
-    echo "Installing bcftools ..."
     echo "Download bcftools-v${BCFTOOLS_VERSION}"
     download $BCFTOOLS_DOWNLOAD_URL "bcftools-${BCFTOOLS_VERSION}.tar.bz2"
     tar xvjf bcftools-${BCFTOOLS_VERSION}.tar.bz2
@@ -1022,12 +1027,12 @@ if [ -z $(check_installed $bcftools_dir) ]; then
 fi
 
 # --------------- bedtools ------------------
+echo ""
+echo "[$(timestamp)] Installing bedtools ..."
 bedtools_dir="$build_dir/bedtools2/bin"
 if [ -z $(check_installed $bedtools_dir) ]; then
     cd $build_dir
     clean "$build_dir/bedtools2"
-    echo ""
-    echo "Installing bedtools ..."
     echo "Download bedtools-v${BEDTOOLS_VERSION}"
     download $BEDTOOLS_DOWNLOAD_URL "bedtools-${BEDTOOLS_VERSION}.tar.gz"
     tar xvzf bedtools-${BEDTOOLS_VERSION}.tar.gz
@@ -1039,13 +1044,13 @@ if [ -z $(check_installed $bedtools_dir) ]; then
 fi
 
 # --------------- ncbi-blast+ ------------------
+echo ""
+echo "[$(timestamp)] Installing ncbi-blast+ ..."
 blast_dir="$build_dir/ncbi-blast-${BLAST_VERSION}+/bin"
 windowmasker_dir="$build_dir/ncbi-blast-${BLAST_VERSION}+/bin"
 if [ -z $(check_installed $blast_dir) ]; then
     cd $build_dir
     clean "$build_dir/ncbi-blast-${BLAST_VERSION}+"
-    echo ""
-    echo "Installing ncbi-blast+ ..."
     echo "Download ncbi-blast-v${BLAST_VERSION}"
     download $BLAST_DOWNLOAD_URL "ncbi-blast-${BLAST_VERSION}+-x64-linux.tar.gz"
     tar xvzf ncbi-blast-${BLAST_VERSION}+-x64-linux.tar.gz
@@ -1053,13 +1058,13 @@ if [ -z $(check_installed $blast_dir) ]; then
     note_installed $blast_dir
 fi
 
-# --------------- ncbi-rmblast ------------------
+# --------------- ncbi-rmblastn ------------------
+echo ""
+echo "[$(timestamp)] Installing ncbi-rmblastn ..."
 rmblast_dir="$build_dir/ncbi-rmblastn-${RMBLAST_VERSION}/bin"
 if [ -z $(check_installed $rmblast_dir) ]; then
     cd $build_dir
     clean "$build_dir/ncbi-rmblastn-${RMBLAST_VERSION}"
-    echo ""
-    echo "Installing ncbi-rmblastn ..."
     echo "Download ncbi-rmblastn-v${BLAST_VERSION}"
     download $RMBLAST_DOWNLOAD_URL "ncbi-rmblastn-${RMBLAST_VERSION}-x64-linux.tar.gz"
     tar xvzf ncbi-rmblastn-${RMBLAST_VERSION}-x64-linux.tar.gz
@@ -1070,13 +1075,13 @@ if [ -z $(check_installed $rmblast_dir) ]; then
 fi
 
 # --------------- parallel ------------------
+echo ""
+echo "[$(timestamp)] Installing parallel ..."
 parallel_dir="$build_dir/parallel-${PARALLEL_VERSION}/bin"
 if [ -z $(check_installed $parallel_dir) ]; then
     cd $build_dir
     clean "$build_dir/parallel-${PARALLEL_VERSION}"
-    echo ""
-    echo "Installing parallel ..."
-    echo "Download parallel"
+    echo "Download parallel-${PARALLEL_VERSION}"
     download $PARALLEL_DOWNLOAD_URL "parallel_v${PARALLEL_VERSION}.tar.bz2"
     tar xvjf parallel_v${PARALLEL_VERSION}.tar.bz2
     cd parallel-${PARALLEL_VERSION}
