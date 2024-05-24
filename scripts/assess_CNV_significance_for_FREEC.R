@@ -75,7 +75,7 @@ if ((nrow(cnv_data) > 0) & (nrow(ratio_data_filtered) > 0)) {
    # loop through the CNV candidates
    MWU_test <- function(test, background) {
    	resultw <- try(wilcox.test(test, background), silent = TRUE)
-        if (class(resultw)=="try-error") {
+        if (inherits(resultw, "try-error")) {
 	   return(list("statistic" = NA, "parameter" = NA, "p.value" = NA, "null.value" = NA, "alternative" = NA, "method" = NA,"data.name" = NA))
 	} else {
 	  return(resultw)
@@ -83,7 +83,7 @@ if ((nrow(cnv_data) > 0) & (nrow(ratio_data_filtered) > 0)) {
    }
    KS_test <- function(test, background){
   	resultks <- try(ks.test(test, background), silent = TRUE)
-        if (class(resultks)=="try-error") {
+        if (inherits(resultks, "try-error")) {
 	   return(list("statistic" = NA, "p.value" = NA, "alternative" = NA, "method" = NA, "data.name" = NA)) 
 	} else {
 	   return(resultks)
