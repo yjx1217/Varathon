@@ -8,7 +8,7 @@ use Cwd;
 ##############################################################
 #  script: batch_short_read_SV_calling.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2020.04.27
+#  last edited: 2024.12.23 | fix, manta cannot overwrite the old results, line 104
 #  description: run short-read-based SV calling for a batch of samples
 #  example: perl batch_short_read_SV_calling.pl -i Master_Sample_Table.txt -threads 4 -b $batch_id -ref_genome ref_genome.fa  -short_read_mapping_dir ./../01.Short_Read_Mapping -min_mapping_quality 20 -caller manta  -ploidy 1 -excluded_chr_list yeast.excluded_chr_list.txt
 ##############################################################
@@ -58,7 +58,7 @@ foreach my $sample_id (@sample_table) {
     my $local_time = localtime();
     print "[$local_time] processing sample $sample_id with read-alignment filtering\n";
     my $ref_genome_file = "$base_dir/$ref_genome";
-    my $bam_file = "$base_dir/$short_read_mapping_dir/$batch_id/$sample_id/$sample_id.realn.bam";
+    my $bam_file = "$base_dir/$short_read_mapping_dir/$batch_id/$sample_id/$sample_id.final.bam";
     print "Check the specified reference genome file:\n";
     if (-e $ref_genome_file) {
         print "Successfully located the specified reference genome file: $ref_genome_file.\n";
@@ -92,7 +92,7 @@ foreach my $sample_id (@sample_table) {
     system("$samtools_dir/samtools faidx ref.genome.fa");
     system("$java_dir/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:ParallelGCThreads=$threads -jar $picard_dir/picard.jar CreateSequenceDictionary -REFERENCE ref.genome.fa -OUTPUT ref.genome.dict");
     ## filter bam file by mapping quality
-    system("$samtools_dir/samtools view -b -q $min_mapping_quality $base_dir/$short_read_mapping_dir/$batch_id/$sample_id/$sample_id.realn.bam  >$sample_id.filtered.bam");
+    system("$samtools_dir/samtools view -b -q $min_mapping_quality $base_dir/$short_read_mapping_dir/$batch_id/$sample_id/$sample_id.final.bam  >$sample_id.filtered.bam");
     # index the filtered.bam file
     system("$samtools_dir/samtools index $sample_id.filtered.bam");
 
@@ -101,6 +101,7 @@ foreach my $sample_id (@sample_table) {
 
     # SV calling 
     if ($caller eq "manta") {
+    system("[ -d ${sample_id}_manta_out ] && rm ${sample_id}.manta.SV.vcf && rm -r ${sample_id}_manta_out && echo removed old results");  #fix, manta cannot overwrite the old results
 	system("/usr/bin/time -v $manta_dir/configManta.py --bam $sample_id.filtered.bam --referenceFasta ref.genome.fa --runDir ${sample_id}_manta_out");
 	system("/usr/bin/time -v ./${sample_id}_manta_out/runWorkflow.py -m local -j $threads");
 	system("cp ./${sample_id}_manta_out/results/variants/diploidSV.vcf.gz $sample_id.manta.SV.vcf.gz");

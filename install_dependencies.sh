@@ -280,7 +280,7 @@ VT_DOWNLOAD_URL="https://github.com/atks/vt"
 BCFTOOLS_VERSION="1.17" # released on 2018.07.18
 BCFTOOLS_DOWNLOAD_URL="https://github.com/samtools/bcftools/releases/download/${BCFTOOLS_VERSION}/bcftools-${BCFTOOLS_VERSION}.tar.bz2"
 
-MINICONDA3_VERSION="py38_4.9.2" # released on 2020.11.24
+MINICONDA3_VERSION="py39_25.5.1-0" # released on 2025.06.24
 if [[ "$mainland_china_installation" == "no" ]]
 then
     MINICONDA3_DOWNLOAD_URL="https://repo.anaconda.com/miniconda/Miniconda3-${MINICONDA3_VERSION}-Linux-x86_64.sh"
@@ -290,7 +290,7 @@ fi
 
 PYTHON3_VERSION="3.8"
 
-BEDTOOLS_VERSION="2.30.0" # released on 2021.01.24
+BEDTOOLS_VERSION="2.31.1" # released on 2023.11.08
 BEDTOOLS_DOWNLOAD_URL="https://github.com/arq5x/bedtools2/releases/download/v${BEDTOOLS_VERSION}/bedtools-${BEDTOOLS_VERSION}.tar.gz"
 
 BLAST_VERSION="2.2.31"
