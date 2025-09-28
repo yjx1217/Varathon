@@ -7,7 +7,7 @@ use Statistics::Descriptive;
 ##############################################################
 #  script: run_FREEC_wrapper_lite.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2020.04.26
+#  last edited: 2023.05.03
 #  description: enable more automatic processing of FREEC (without reference preprocessing)
 #  example: 
 #   perl run_FREEC_wrapper.pl \
@@ -26,7 +26,7 @@ use Statistics::Descriptive;
 #   -output_prefix output_prefix
 ##############################################################
 
-my ($refseq, $bam, $prefix, $ploidy, $threads, $bedtools, $samtools, $freec, $window_size, $step_size, $mates_orientation, $read_length_for_mappability, $min_mappability, $min_expected_gc, $max_expected_gc, $excluded_chr_list);
+my ($refseq, $bam, $prefix, $ploidy, $threads, $bedtools, $samtools, $freec, $window_size, $step_size, $mate_orientation, $read_length_for_mappability, $min_mappability, $min_expected_gc, $max_expected_gc, $excluded_chr_list);
 
 $ploidy = 2;
 $threads = 1;
@@ -36,7 +36,7 @@ $min_mappability = 0.85;
 $excluded_chr_list = "";
 $min_expected_gc = 0.3; # this value will be automatically adjusted based on the input genome, so no need to change
 $max_expected_gc = 0.6; # this value will be automatically adjusted based on the input genome, so no need to change
-$mates_orientation = 0; # '0' for sorted bam, 'FR' for unsorted Illumina paired-ends, 'RF' for Illumina mate-pairs
+$mate_orientation = 0; # '0' for sorted bam, 'FR' for unsorted Illumina paired-ends, 'RF' for Illumina mate-pairs
 my $telocentromeric = 0;
 
 GetOptions('refseq|r:s' => \$refseq,
@@ -53,7 +53,7 @@ GetOptions('refseq|r:s' => \$refseq,
 	   'window|w:i' => \$window_size,
 	   'step|s:i' => \$step_size,
 	   'read_length_for_mappability|read_length:i' => \$read_length_for_mappability,
-	   'mates_orientation|mo:s' => \$mates_orientation,
+	   'mate_orientation|mo:s' => \$mate_orientation,
 	   'excluded_chr_list|e:s' => \$excluded_chr_list);
 
 my $refseq_fh = read_file($refseq);
@@ -204,7 +204,7 @@ print $FREEC_config_fh "breakPointType = 2\n";
 print $FREEC_config_fh "[sample]\n";
 print $FREEC_config_fh "inputFormat = BAM\n";
 print $FREEC_config_fh "mateFile = FREEC.bam\n";
-print $FREEC_config_fh "matesOrientation = $mates_orientation\n";
+print $FREEC_config_fh "mateOrientation = $mate_orientation\n";
 close $FREEC_config_fh;
 
 # run FREEC

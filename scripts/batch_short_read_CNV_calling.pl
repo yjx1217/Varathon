@@ -9,7 +9,7 @@ use Cwd;
 ##############################################################
 #  script: batch_short_read_CNV_calling.pl
 #  author: Jia-Xing Yue (GitHub ID: yjx1217)
-#  last edited: 2020.11.26
+#  last edited: 2023.05.03
 #  description: run short-read-based CNV calling for a batch of samples
 #  example: perl batch_short_read_CNV_calling.pl -i Master_Sample_Table.txt -threads 4 -b $batch_id -ref_genome ref_genome.fa  -short_read_mapping_dir ./../01.Short_Read_Mapping -min_mapping_quality 30 -window_size 250  -ploidy 1 -excluded_chr_list yeast.excluded_chr_list.txt
 ##############################################################
@@ -66,7 +66,7 @@ foreach my $sample_id (@sample_table) {
     my $local_time = localtime();
     print "[$local_time] processing sample $sample_id with read-alignment filtering\n";
     my $ref_genome_file = "$base_dir/$ref_genome";
-    my $bam_file = "$base_dir/$short_read_mapping_dir/$batch_id/$sample_id/$sample_id.realn.bam";
+    my $bam_file = "$base_dir/$short_read_mapping_dir/$batch_id/$sample_id/$sample_id.final.bam";
     print "Check the specified reference genome file:\n";
     if (-e $ref_genome_file) {
         print "Successfully located the specified reference genome file: $ref_genome_file.\n";
@@ -85,10 +85,21 @@ foreach my $sample_id (@sample_table) {
     }
 
     # setup reference genome
-    my $min_expected_gc = 0.4;
-    my $max_expected_gc = 0.6;
+    my $min_expected_gc = 0;
+    my $max_expected_gc = 1;
     if (-d "$base_dir/$output_dir/ref_genome_preprocessing") {
 	print "found pre-calculated ref_geome_preprocessing directory!\n";
+	my $min_expected_gc_file = "$base_dir/$output_dir/ref_genome_preprocessing/min_expected_gc.txt";
+	my $min_expected_gc_fh = read_file($min_expected_gc_file);
+	$min_expected_gc = parse_expected_gc($min_expected_gc_fh);
+	close($min_expected_gc_fh);
+	my $max_expected_gc_file = "$base_dir/$output_dir/ref_genome_preprocessing/max_expected_gc.txt";
+	my $max_expected_gc_fh = read_file($max_expected_gc_file);
+	$max_expected_gc = parse_expected_gc($max_expected_gc_fh);
+	close($max_expected_gc_fh);
+
+	print "picking up min_expected_gc and max_expected_gc values\n";
+	print "min_expected_gc=$min_expected_gc, max_expected_gc=$max_expected_gc\n";
     } else {
 	print "generating ref_geome_preprocessing directory!\n";
 	system("mkdir -p $base_dir/$output_dir/ref_genome_preprocessing");
@@ -162,10 +173,10 @@ foreach my $sample_id (@sample_table) {
 		$gc_quantile_lower_chr = sprintf("%.3f", $gc_quantile_lower_chr);
 		my $gc_quantile_upper_chr = $gc_stat_chr->percentile($upper_quantile);
 		$gc_quantile_upper_chr = sprintf("%.3f", $gc_quantile_upper_chr);
-		if ($gc_quantile_lower_chr < $min_expected_gc) {
+		if ($gc_quantile_lower_chr > $min_expected_gc) {
 		    $min_expected_gc = $gc_quantile_lower_chr;
 		}
-		if ($gc_quantile_upper_chr > $max_expected_gc) {
+		if (($gc_quantile_upper_chr < $max_expected_gc) and ($gc_quantile_upper_chr > $min_expected_gc)) {
 		    $max_expected_gc = $gc_quantile_upper_chr;
 		}
 		print "chr=$chr\n";
@@ -175,6 +186,9 @@ foreach my $sample_id (@sample_table) {
 	    }
 	}
 	
+	# write down max_expected_gc and min_expected_gc
+	system("echo $max_expected_gc > max_expected_gc.txt");
+	system("echo $min_expected_gc > min_expected_gc.txt");
 	# mappability calculation by gemtools
 	system("$gemtools_dir/gemtools index -t $threads  -i FREEC.refseq.fa -o FREEC.refseq.gem");
 	system("$gemtools_dir/gem-mappability -T $threads -I FREEC.refseq.gem -l $raw_read_length -m 0.02 -e 0.02 -o FREEC.refseq");
@@ -184,7 +198,7 @@ foreach my $sample_id (@sample_table) {
     chdir("$sample_output_dir") or die "cannot change directory to: $!\n";
     system("mkdir tmp");
     ## filter bam file by mapping quality
-    system("$samtools_dir/samtools view -b -q $min_mapping_quality $base_dir/$short_read_mapping_dir/$batch_id/$sample_id/$sample_id.realn.bam  >$sample_id.filtered.bam");
+    system("$samtools_dir/samtools view -b -q $min_mapping_quality $base_dir/$short_read_mapping_dir/$batch_id/$sample_id/$sample_id.final.bam  >$sample_id.filtered.bam");
     # index the filtered.bam file
     system("$samtools_dir/samtools index $sample_id.filtered.bam");
 
@@ -193,9 +207,9 @@ foreach my $sample_id (@sample_table) {
 
     # scan for aneuploidy with FREEC
     if (-s "$base_dir/$excluded_chr_list") {
-    	system("perl $VARATHON_HOME/scripts/run_FREEC_wrapper_lite.pl -r ./../ref_genome_preprocessing/ref.genome.fa -bam $sample_id.filtered.bam -prefix $sample_id -ploidy $ploidy -bedtools $bedtools_dir/bedtools -samtools $samtools_dir/samtools -freec $freec_dir/freec -window $window_size -step $step_size -read_length_for_mappability $raw_read_length -min_mappability $min_mappability -mates_orientation 0 -excluded_chr_list $base_dir/$excluded_chr_list -max_expected_gc $max_expected_gc -min_expected_gc $min_expected_gc -threads $threads");
+    	system("perl $VARATHON_HOME/scripts/run_FREEC_wrapper_lite.pl -r ./../ref_genome_preprocessing/ref.genome.fa -bam $sample_id.filtered.bam -prefix $sample_id -ploidy $ploidy -bedtools $bedtools_dir/bedtools -samtools $samtools_dir/samtools -freec $freec_dir/freec -window $window_size -step $step_size -read_length_for_mappability $raw_read_length -min_mappability $min_mappability -mate_orientation 0 -excluded_chr_list $base_dir/$excluded_chr_list -max_expected_gc $max_expected_gc -min_expected_gc $min_expected_gc -threads $threads");
     } else {
-    	system("perl $VARATHON_HOME/scripts/run_FREEC_wrapper_lite.pl -r ./../ref.genome.fa -bam $sample_id.realn.bam -prefix $sample_id -ploidy $ploidy -bedtools $bedtools_dir/bedtools -samtools $samtools_dir/samtools -freec $freec_dir/freec -window $window_size -step $step_size -read_length_for_mappability $raw_read_length -min_mappability $min_mappability -mates_orientation 0 -max_expected_gc $max_expected_gc -min_expected_gc $min_expected_gc  -threads $threads");
+    	system("perl $VARATHON_HOME/scripts/run_FREEC_wrapper_lite.pl -r ./../ref.genome.fa -bam $sample_id.final.bam -prefix $sample_id -ploidy $ploidy -bedtools $bedtools_dir/bedtools -samtools $samtools_dir/samtools -freec $freec_dir/freec -window $window_size -step $step_size -read_length_for_mappability $raw_read_length -min_mappability $min_mappability -mate_orientation 0 -max_expected_gc $max_expected_gc -min_expected_gc $min_expected_gc  -threads $threads");
     }
     system("Rscript --vanilla --slave $VARATHON_HOME/scripts/CNV_segmentation_by_DNAcopy.R --input $sample_id.FREEC.bam_ratio.txt --prefix $sample_id --window $window_size --ploidy $ploidy --genome_fai ./../ref_genome_preprocessing/ref.genome.fa.fai");
     system("perl $VARATHON_HOME/scripts/adjust_FREEC_copynumber_by_DNAcopy_copynumber.pl -i $sample_id.FREEC.bam_ratio.sorted.txt -a $sample_id.FREEC.bam_ratio.sorted.resegmented.lite.txt -o $sample_id.FREEC.bam_ratio.sorted.adjusted.txt");
@@ -215,7 +229,7 @@ foreach my $sample_id (@sample_table) {
     	    system("echo -e \"chr\tstart\tend\tcopy_number\tstatus\tMWU_test_p_value\tKS_test_p_value\" > $sample_id.CNV_significance_test.txt");
     	}
     } else {
-    	system(" echo \"Exception encountered for FREEC! Exit! ...\" > $sample_id.realn.bam.no_FREEC.txt");
+    	system(" echo \"Exception encountered for FREEC! Exit! ...\" > $sample_id.final.bam.no_FREEC.txt");
     }
     system("rm -r tmp");
     $local_time = localtime();
@@ -223,20 +237,21 @@ foreach my $sample_id (@sample_table) {
   
     # remove old files
     if ($debug eq "no") {
-	system("rm ref.genome.fa");
+	# system("rm ref.genome.fa");
 	system("rm $sample_id.filtered.bam");
 	system("rm $sample_id.filtered.bam.bai");
 	system("rm for_CNV.bam");
+	system("rm FREEC.bam");
 	system("rm FREEC.bam.header.old.sam");
 	system("rm FREEC.bam.header.new.sam");
-	system("rm FREEC.refseq.log");
-	system("rm for_CNV.refseq.fa");
-	system("rm for_CNV.refseq.fa.fai");
-	system("rm FREEC.refseq.fa");
-	system("rm FREEC.refseq.fa.fai");
-	system("rm -r FREEC_refseq_chr");
-	system("rm FREEC.refseq.gem");
-	system("rm FREEC.refseq.mappability");
+	# system("rm FREEC.refseq.log");
+	# system("rm for_CNV.refseq.fa");
+	# system("rm for_CNV.refseq.fa.fai");
+	# system("rm FREEC.refseq.fa");
+	# system("rm FREEC.refseq.fa.fai");
+	# system("rm -r FREEC_refseq_chr");
+	# system("rm FREEC.refseq.gem");
+	# system("rm FREEC.refseq.mappability");
     }
     chdir("./../") or die "cannot change directory to: $!\n";
 }
@@ -361,3 +376,18 @@ sub get_read_length {
     return $read_length;
 }
 
+
+sub parse_expected_gc {
+    my $fh = shift @_;
+    my $expected_gc;
+    while (<$fh>) {
+	chomp;
+	/^#/ and next;
+	/^\s*$/ and next;
+	$expected_gc = $_;
+	last;
+    }
+    return $expected_gc;
+}
+
+ 

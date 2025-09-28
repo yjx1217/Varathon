@@ -119,8 +119,10 @@ foreach my $sample_id (@sample_table) {
     if ($long_read_mapper eq "minimap2") {
 	if ($long_read_technology eq "pacbio") {
 	    system("/usr/bin/time -v $minimap2_dir/minimap2 -t $threads -ax map-pb ref.genome.fa $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} | $samtools_dir/samtools view -bS -q $min_mapping_quality - >$sample_id.bam");
-	} else {
+	} elsif ($long_read_technology eq "nanopore") {
 	    system("/usr/bin/time -v $minimap2_dir/minimap2 -t $threads -ax map-ont ref.genome.fa $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} | $samtools_dir/samtools view -bS -q $min_mapping_quality - >$sample_id.bam");
+	} else {
+	    system("/usr/bin/time -v $minimap2_dir/minimap2 -t $threads -ax map-hifi ref.genome.fa $base_dir/$long_read_dir/$sample_table{$sample_id}{'long_read_file'} | $samtools_dir/samtools view -bS -q $min_mapping_quality - >$sample_id.bam");
 	}
 	if ($debug eq "no") {
 	    # system("rm ref.genome.fa.amb");
